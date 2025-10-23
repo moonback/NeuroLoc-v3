@@ -1,27 +1,31 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useRole } from '../hooks/useRole';
 import { objectsService } from '../services/objects.service';
 import { reservationsService } from '../services/reservations.service';
 import { RentalObject, Reservation, Handover } from '../types';
 import { Loader } from '../components/common/Loader';
 import { ObjectCard } from '../components/objects/ObjectCard';
-import { Package, Calendar, Edit, Trash2, Euro, RefreshCw, AlertCircle, CheckCircle, XCircle, QrCode, User, Clock } from 'lucide-react';
+import { Package, Calendar, Edit, Trash2, Euro, RefreshCw, AlertCircle, CheckCircle, XCircle, QrCode, User, Clock, Star } from 'lucide-react';
 // import { DevelopmentModeBanner } from '../components/common/DevelopmentModeBanner';
 import { PaymentStatus } from '../components/payment/PaymentStatus';
 import { HandoversManager } from '../components/handovers/HandoversManager';
 import { ReservationHandovers } from '../components/handovers/ReservationHandovers';
 import { AddressManager } from '../components/profile/AddressManager';
+import { CompletedReservations } from '../components/profile/CompletedReservations';
+import { RoleStats } from '../components/profile/RoleStats';
 import toast from 'react-hot-toast';
 
 export const Dashboard = () => {
   const { profile } = useAuth();
+  const { isLoueur } = useRole();
   const [myObjects, setMyObjects] = useState<RentalObject[]>([]);
   const [myReservations, setMyReservations] = useState<Reservation[]>([]);
   const [receivedReservations, setReceivedReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'objects' | 'reservations' | 'received' | 'handovers'>('objects');
+  const [activeTab, setActiveTab] = useState<'objects' | 'reservations' | 'received' | 'handovers' | 'reviews'>(isLoueur ? 'objects' : 'reservations');
 
   const loadData = useCallback(async () => {
     try {
@@ -29,15 +33,26 @@ export const Dashboard = () => {
       setError(null);
       
       if (profile?.id) {
-        const [objects, rentals, received] = await Promise.all([
-          objectsService.getObjectsByOwner(profile.id),
-          reservationsService.getReservationsAsRenter(),
-          reservationsService.getReservationsAsOwner()
-        ]);
-        
-        setMyObjects(objects);
-        setMyReservations(rentals);
-        setReceivedReservations(received);
+        if (isLoueur) {
+          const [objects, rentals, received] = await Promise.all([
+            objectsService.getObjectsByOwner(profile.id),
+            reservationsService.getReservationsAsRenter(),
+            reservationsService.getReservationsAsOwner()
+          ]);
+          
+          setMyObjects(objects);
+          setMyReservations(rentals);
+          setReceivedReservations(received);
+        } else {
+          const [rentals, received] = await Promise.all([
+            reservationsService.getReservationsAsRenter(),
+            reservationsService.getReservationsAsOwner()
+          ]);
+          
+          setMyObjects([]);
+          setMyReservations(rentals);
+          setReceivedReservations(received);
+        }
       } else {
         setError('Profil utilisateur non trouvé. Veuillez vous reconnecter.');
       }
@@ -48,7 +63,7 @@ export const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [profile?.id]);
+  }, [profile?.id, isLoueur]);
 
   useEffect(() => {
     loadData();
@@ -146,8 +161,13 @@ export const Dashboard = () => {
               className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              <span>Actualiser</span>
+              <span className="text-white">Actualiser</span>
             </button>
+          </div>
+          
+          {/* Statistiques de rôle */}
+          <div className="mt-6">
+            <RoleStats />
           </div>
           
           {error && (
@@ -170,19 +190,21 @@ export const Dashboard = () => {
         <div className="bg-white rounded-lg shadow-md mb-8">
           <div className="border-b">
             <nav className="flex space-x-8 px-6">
-              <button
-                onClick={() => setActiveTab('objects')}
-                className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
-                  activeTab === 'objects'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <Package className="h-5 w-5" />
-                  <span>Mes objets ({myObjects.length})</span>
-                </div>
-              </button>
+              {isLoueur && (
+                <button
+                  onClick={() => setActiveTab('objects')}
+                  className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
+                    activeTab === 'objects'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <Package className="h-5 w-5" />
+                    <span>Mes objets ({myObjects.length})</span>
+                  </div>
+                </button>
+              )}
               <button
                 onClick={() => setActiveTab('reservations')}
                 className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
@@ -196,31 +218,49 @@ export const Dashboard = () => {
                   <span>Mes locations ({myReservations.length})</span>
                 </div>
               </button>
-              <button
-                onClick={() => setActiveTab('received')}
-                className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
-                  activeTab === 'received'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <Calendar className="h-5 w-5" />
-                  <span>Réservations reçues ({receivedReservations.length})</span>
-                </div>
-              </button>
+              {isLoueur && (
+                <button
+                  onClick={() => setActiveTab('received')}
+                  className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
+                    activeTab === 'received'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-5 w-5" />
+                    <span>Réservations reçues ({receivedReservations.length})</span>
+                  </div>
+                </button>
+              )}
+              
+              {isLoueur && (
+                <button
+                  onClick={() => setActiveTab('handovers')}
+                  className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
+                    activeTab === 'handovers'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <QrCode className="h-5 w-5" />
+                    <span>Handovers</span>
+                  </div>
+                </button>
+              )}
               
               <button
-                onClick={() => setActiveTab('handovers')}
+                onClick={() => setActiveTab('reviews')}
                 className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
-                  activeTab === 'handovers'
+                  activeTab === 'reviews'
                     ? 'border-blue-600 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
                 <div className="flex items-center space-x-2">
-                  <QrCode className="h-5 w-5" />
-                  <span>Handovers</span>
+                  <Star className="h-5 w-5" />
+                  <span>Avis</span>
                 </div>
               </button>
             </nav>
@@ -461,6 +501,22 @@ export const Dashboard = () => {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {activeTab === 'reviews' && (
+              <div className="space-y-6">
+                {/* Mes locations terminées - Avis pour les propriétaires */}
+                <CompletedReservations 
+                  reservations={receivedReservations} 
+                  isOwner={true} 
+                />
+                
+                {/* Mes réservations terminées - Avis pour les locataires */}
+                <CompletedReservations 
+                  reservations={myReservations} 
+                  isOwner={false} 
+                />
               </div>
             )}
           </div>

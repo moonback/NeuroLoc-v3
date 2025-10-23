@@ -46,7 +46,8 @@ export const reservationsService = {
       .select(`
         *,
         object:objects(*),
-        owner:profiles!reservations_owner_id_fkey(*)
+        owner:profiles!reservations_owner_id_fkey(*),
+        handovers:handovers(*)
       `)
       .eq('renter_id', user.id)
       .order('created_at', { ascending: false });

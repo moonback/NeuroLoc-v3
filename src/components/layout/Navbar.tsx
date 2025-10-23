@@ -1,13 +1,16 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useRole } from '../../hooks/useRole';
 import { useNotifications } from '../../hooks/useNotifications';
 import { authService } from '../../services/auth.service';
+import { RoleBadge } from '../common/RoleBadge';
 import { Menu, Home, Package, MessageSquare, User, LogOut, Plus, Settings, X, Search, Bell, ChevronDown, HelpCircle, Grid3X3, QrCode } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
 export const Navbar = () => {
   const { user } = useAuth();
+  const { role } = useRole();
   const { unreadCount } = useNotifications();
   const navigate = useNavigate();
   const location = useLocation();
@@ -54,6 +57,11 @@ export const Navbar = () => {
         <div className="text-left">
           <div className="font-semibold text-gray-900 text-sm">{name}</div>
           <div className="text-xs text-gray-500">{email}</div>
+          {role && (
+            <div className="mt-1">
+              <RoleBadge role={role} size="sm" />
+            </div>
+          )}
         </div>
       </div>
     );

@@ -1,3 +1,5 @@
+export type UserRole = 'client' | 'loueur' | 'admin';
+
 export type ObjectStatus = 'available' | 'rented' | 'unavailable';
 
 export type ReservationStatus = 'pending' | 'confirmed' | 'ongoing' | 'completed' | 'cancelled' | 'rejected';
@@ -29,6 +31,8 @@ export interface Profile {
   country: string | null;
   latitude: number | null;
   longitude: number | null;
+  role: UserRole;
+  is_verified: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -156,6 +160,7 @@ export interface AuthCredentials {
 
 export interface SignupCredentials extends AuthCredentials {
   full_name: string;
+  role: UserRole;
 }
 
 export interface GeocodeResult {
