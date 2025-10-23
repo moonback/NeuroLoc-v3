@@ -77,6 +77,24 @@ export const handoversService = {
     status: HandoverStatus,
     notes?: string
   ): Promise<Handover> {
+    // D'abord, récupérer le handover pour obtenir les informations de la réservation
+    const { data: handoverData, error: handoverError } = await supabase
+      .from('handovers')
+      .select(`
+        *,
+        reservation:reservations(
+          *,
+          object:objects(*),
+          renter:profiles!reservations_renter_id_fkey(*),
+          owner:profiles!reservations_owner_id_fkey(*)
+        )
+      `)
+      .eq('id', handoverId)
+      .single();
+
+    if (handoverError) throw handoverError;
+
+    // Mettre à jour le handover
     const { data, error } = await supabase
       .from('handovers')
       .update({
@@ -98,6 +116,23 @@ export const handoversService = {
       .single();
 
     if (error) throw error;
+
+    // Si c'est une restitution marquée comme "returned", mettre à jour la réservation en "completed"
+    if (status === 'returned' && handoverData?.type === 'return') {
+      const { error: reservationError } = await supabase
+        .from('reservations')
+        .update({
+          status: 'completed',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', handoverData.reservation_id);
+
+      if (reservationError) {
+        console.error('Error updating reservation status:', reservationError);
+        // Ne pas faire échouer la transaction principale
+      }
+    }
+
     return data;
   },
 
