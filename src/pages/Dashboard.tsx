@@ -8,6 +8,7 @@ import { Loader } from '../components/common/Loader';
 import { ObjectCard } from '../components/objects/ObjectCard';
 import { Package, Calendar, Edit, Trash2, Euro } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { debugAuth, debugObjects } from '../utils/debug';
 
 export const Dashboard = () => {
   const { profile } = useAuth();
@@ -26,7 +27,13 @@ export const Dashboard = () => {
       setLoading(true);
       console.log('Dashboard: Loading data...', { profile: profile?.id });
       
+      // Debug complet
+      await debugAuth();
+      await debugObjects();
+      
       if (profile) {
+        console.log('Profile found:', profile);
+        
         const [objects, rentals, received] = await Promise.all([
           objectsService.getObjectsByOwner(profile.id),
           reservationsService.getReservationsAsRenter(),
@@ -37,7 +44,8 @@ export const Dashboard = () => {
           objects: objects.length, 
           rentals: rentals.length, 
           received: received.length,
-          objectsData: objects
+          objectsData: objects,
+          profileId: profile.id
         });
         
         setMyObjects(objects);
@@ -45,6 +53,7 @@ export const Dashboard = () => {
         setReceivedReservations(received);
       } else {
         console.log('Dashboard: No profile found');
+        console.log('Available profile data:', profile);
       }
     } catch (error) {
       console.error('Error loading dashboard data:', error);
@@ -158,12 +167,26 @@ export const Dashboard = () => {
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold">Mes objets</h2>
-                  <Link
-                    to="/objects/new"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-                  >
-                    Ajouter un objet
-                  </Link>
+                  <div className="flex space-x-2">
+                    <button
+                      onClick={async () => {
+                        console.log('=== MANUAL DEBUG ===');
+                        await debugAuth();
+                        await debugObjects();
+                        console.log('Profile from hook:', profile);
+                        console.log('=== END MANUAL DEBUG ===');
+                      }}
+                      className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition text-sm"
+                    >
+                      Debug
+                    </button>
+                    <Link
+                      to="/objects/new"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                    >
+                      Ajouter un objet
+                    </Link>
+                  </div>
                 </div>
 
                 {myObjects.length === 0 ? (
