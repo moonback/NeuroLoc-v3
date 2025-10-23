@@ -6,9 +6,8 @@ import { reservationsService } from '../services/reservations.service';
 import { RentalObject, Reservation } from '../types';
 import { Loader } from '../components/common/Loader';
 import { ObjectCard } from '../components/objects/ObjectCard';
-import { Package, Calendar, Edit, Trash2, Euro } from 'lucide-react';
+import { Package, Calendar, Edit, Trash2, Euro, RefreshCw, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { debugAuth, debugObjects } from '../utils/debug';
 
 export const Dashboard = () => {
   const { profile } = useAuth();
@@ -16,48 +15,42 @@ export const Dashboard = () => {
   const [myReservations, setMyReservations] = useState<Reservation[]>([]);
   const [receivedReservations, setReceivedReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'objects' | 'reservations' | 'received'>('objects');
 
   useEffect(() => {
     loadData();
   }, []);
 
+  // Recharger les données quand le profil change
+  useEffect(() => {
+    if (profile?.id) {
+      loadData();
+    }
+  }, [profile?.id]);
+
   const loadData = async () => {
     try {
       setLoading(true);
-      console.log('Dashboard: Loading data...', { profile: profile?.id });
+      setError(null);
       
-      // Debug complet
-      await debugAuth();
-      await debugObjects();
-      
-      if (profile) {
-        console.log('Profile found:', profile);
-        
+      if (profile?.id) {
         const [objects, rentals, received] = await Promise.all([
           objectsService.getObjectsByOwner(profile.id),
           reservationsService.getReservationsAsRenter(),
           reservationsService.getReservationsAsOwner()
         ]);
         
-        console.log('Dashboard: Data loaded:', { 
-          objects: objects.length, 
-          rentals: rentals.length, 
-          received: received.length,
-          objectsData: objects,
-          profileId: profile.id
-        });
-        
         setMyObjects(objects);
         setMyReservations(rentals);
         setReceivedReservations(received);
       } else {
-        console.log('Dashboard: No profile found');
-        console.log('Available profile data:', profile);
+        setError('Profil utilisateur non trouvé. Veuillez vous reconnecter.');
       }
     } catch (error) {
-      console.error('Error loading dashboard data:', error);
-      toast.error('Erreur lors du chargement des données');
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      setError(`Erreur lors du chargement des données: ${errorMessage}`);
+      toast.error(`Erreur lors du chargement des données: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -111,10 +104,32 @@ export const Dashboard = () => {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Bienvenue, {profile?.full_name || 'Utilisateur'}
-          </h1>
-          <p className="text-gray-600">Gérez vos objets et vos réservations</p>
+          <div className="flex justify-between items-start">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                Bienvenue, {profile?.full_name || 'Utilisateur'}
+              </h1>
+              <p className="text-gray-600">Gérez vos objets et vos réservations</p>
+            </div>
+            <button
+              onClick={loadData}
+              disabled={loading}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              <span>Actualiser</span>
+            </button>
+          </div>
+          
+          {error && (
+            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-3">
+              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+              <div>
+                <p className="text-red-800 font-medium">Erreur de chargement</p>
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-lg shadow-md mb-8">
@@ -167,26 +182,12 @@ export const Dashboard = () => {
               <div>
                 <div className="flex justify-between items-center mb-6">
                   <h2 className="text-xl font-semibold">Mes objets</h2>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={async () => {
-                        console.log('=== MANUAL DEBUG ===');
-                        await debugAuth();
-                        await debugObjects();
-                        console.log('Profile from hook:', profile);
-                        console.log('=== END MANUAL DEBUG ===');
-                      }}
-                      className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition text-sm"
-                    >
-                      Debug
-                    </button>
-                    <Link
-                      to="/objects/new"
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-                    >
-                      Ajouter un objet
-                    </Link>
-                  </div>
+                  <Link
+                    to="/objects/new"
+                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+                  >
+                    Ajouter un objet
+                  </Link>
                 </div>
 
                 {myObjects.length === 0 ? (
