@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Star, Users, Shield, MapPin, CheckCircle, MessageSquare } from 'lucide-react';
+import { Search, Star, Users, Shield, MapPin, CheckCircle, MessageSquare, Package } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const FEATURES = [
