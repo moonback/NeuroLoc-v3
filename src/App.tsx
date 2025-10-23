@@ -6,6 +6,7 @@ import { Footer } from './components/layout/Footer';
 import { Loader } from './components/common/Loader';
 import { Home } from './pages/Home';
 import { HowItWorks } from './pages/HowItWorks';
+import { ObjectsList } from './pages/ObjectsList';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 import { Dashboard } from './pages/Dashboard';
@@ -59,6 +60,7 @@ function App() {
           <Routes>
             <Route path="/" element={<HomeRoute />} />
             <Route path="/how-it-works" element={<HowItWorks />} />
+            <Route path="/objects" element={<ObjectsList />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/objects/:id" element={<ObjectDetails />} />

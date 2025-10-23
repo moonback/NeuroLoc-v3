@@ -106,6 +106,12 @@ export const Home = () => {
             {/* Boutons d'action */}
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
+                to="/objects"
+                className="bg-white text-blue-600 px-8 py-4 rounded-2xl font-semibold text-lg hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+              >
+                Voir les objets
+              </Link>
+              <Link
                 to="/signup"
                 className="bg-white text-blue-600 px-8 py-4 rounded-2xl font-semibold text-lg hover:bg-blue-50 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
               >

@@ -1,7 +1,7 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
-import { Menu, Home, Package, MessageSquare, User, LogOut, Plus, Settings, X, Search, Bell, ChevronDown, HelpCircle } from 'lucide-react';
+import { Menu, Home, Package, MessageSquare, User, LogOut, Plus, Settings, X, Search, Bell, ChevronDown, HelpCircle, Grid3X3 } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
@@ -131,6 +131,8 @@ export const Navbar = () => {
               {user ? (
                 <>
                   <NavLink to="/dashboard" icon={User}>Tableau de bord</NavLink>
+                  <NavLink to="/objects" icon={Grid3X3}>Objets</NavLink>
+
                   <NavLink to="/messages" icon={MessageSquare} badge={notificationCount}>Messages</NavLink>
                   
                   {/* Bouton de recherche */}
@@ -271,6 +273,7 @@ export const Navbar = () => {
                 <NavLink to="/" icon={Home} className="w-full justify-start text-lg">
                   Accueil
                 </NavLink>
+                
                 <NavLink to="/how-it-works" icon={HelpCircle} className="w-full justify-start text-lg">
                   Comment ça marche
                 </NavLink>
