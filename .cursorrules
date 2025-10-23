@@ -1,0 +1,305 @@
+# Configuration Cursor AI pour NeuroLoc
+
+## Contexte du projet
+
+NeuroLoc est une plateforme moderne de location d'objets entre particuliers construite avec React, TypeScript, Supabase et Stripe. L'application permet aux utilisateurs de publier leurs objets à louer, de réserver des objets d'autres utilisateurs, et de communiquer via une messagerie temps réel.
+
+## Stack technique
+
+### Frontend
+- **React 18** avec hooks et composants fonctionnels
+- **TypeScript** pour la sécurité des types
+- **Vite** comme bundler et serveur de développement
+- **Tailwind CSS** pour le styling
+- **React Router v6** pour la navigation
+- **React Hot Toast** pour les notifications
+- **Lucide React** pour les icônes
+
+### Backend et infrastructure
+- **Supabase** comme Backend-as-a-Service
+  - PostgreSQL avec Row Level Security (RLS)
+  - Authentification JWT
+  - Storage pour les images
+  - Realtime pour la messagerie
+  - Edge Functions (Deno) pour Stripe
+- **Stripe** pour les paiements sécurisés
+
+## Conventions de code
+
+### Nommage
+- **Variables et fonctions** : `camelCase` (ex: `userName`, `calculateTotalPrice`)
+- **Composants React** : `PascalCase` (ex: `UserProfile`, `ObjectCard`)
+- **Types et interfaces** : `PascalCase` (ex: `UserProfile`, `ReservationStatus`)
+- **Constantes** : `UPPER_SNAKE_CASE` (ex: `API_BASE_URL`, `MAX_FILE_SIZE`)
+- **Fichiers** : `kebab-case` pour les utilitaires, `PascalCase` pour les composants
+- **Dossiers** : `kebab-case` (ex: `user-profile`, `object-card`)
+
+### Structure des composants React
+```typescript
+// 1. Imports (React, hooks, composants, services)
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../hooks/useAuth';
+import { Button } from './common/Button';
+
+// 2. Types et interfaces
+interface ComponentProps {
+  title: string;
+  onAction: () => void;
+}
+
+// 3. Composant principal
+export const ComponentName: React.FC<ComponentProps> = ({ title, onAction }) => {
+  // 4. Hooks
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+
+  // 5. Handlers
+  const handleClick = async () => {
+    setIsLoading(true);
+    try {
+      await onAction();
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // 6. Effects
+  useEffect(() => {
+    // Side effects
+  }, []);
+
+  // 7. Render
+  return (
+    <div className="component-container">
+      <h2>{title}</h2>
+      <Button onClick={handleClick} loading={isLoading} disabled={!user}>
+        Action
+      </Button>
+    </div>
+  );
+};
+```
+
+### Gestion d'état
+- Utiliser des **hooks personnalisés** pour la logique métier complexe
+- **useState** pour l'état local simple
+- **useCallback** et **useMemo** pour l'optimisation
+- Éviter les **useEffect** complexes, préférer les hooks personnalisés
+
+### Services API
+- Tous les appels API dans des **services dédiés** (`src/services/`)
+- Gestion d'erreur centralisée avec `try/catch`
+- Types TypeScript pour toutes les interfaces
+- Validation des données d'entrée
+
+```typescript
+// Exemple de service
+export const objectsService = {
+  async getObjects(filters?: SearchFilters): Promise<RentalObject[]> {
+    try {
+      const { data, error } = await supabase
+        .from('objects')
+        .select('*, owner:profiles(*)')
+        .eq('status', 'available');
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching objects:', error);
+      throw error;
+    }
+  }
+};
+```
+
+## Patterns architecturaux
+
+### Frontend
+- **Composition de composants** plutôt que l'héritage
+- **Props drilling** évité avec des hooks personnalisés
+- **Séparation des responsabilités** : UI vs logique métier
+- **Routes protégées** avec composant `ProtectedRoute`
+
+### Backend
+- **Row Level Security (RLS)** sur toutes les tables
+- **Policies restrictives** basées sur l'utilisateur authentifié
+- **Edge Functions** pour les intégrations externes (Stripe)
+- **Triggers SQL** pour l'automatisation
+
+### Base de données
+- **UUID** comme clés primaires
+- **Contraintes de validation** côté serveur
+- **Index optimisés** pour les requêtes fréquentes
+- **Fonctions SQL** pour la logique métier complexe
+
+## Bonnes pratiques
+
+### Sécurité
+- **Validation côté client ET serveur**
+- **Sanitisation des entrées utilisateur**
+- **Upload sécurisé** avec validation des types/taille
+- **Gestion des tokens d'authentification**
+- **Policies RLS** pour l'accès aux données
+
+### Performance
+- **Lazy loading** des composants avec `React.lazy`
+- **Memoization** avec `useMemo` et `useCallback`
+- **Optimistic updates** pour l'UX
+- **Pagination** pour les grandes listes
+- **Compression des images**
+
+### Gestion d'erreur
+```typescript
+// Pattern de gestion d'erreur
+try {
+  const result = await apiService.createObject(data);
+  toast.success('Objet créé avec succès');
+  return result;
+} catch (error) {
+  console.error('Error creating object:', error);
+  toast.error(error.message || 'Une erreur est survenue');
+  throw error;
+}
+```
+
+### Types TypeScript
+- **Interfaces** pour les objets complexes
+- **Types unions** pour les statuts/enums
+- **Types utilitaires** pour les variations
+- **Strict mode** activé
+
+```typescript
+// Exemple de types
+export type ObjectStatus = 'available' | 'rented' | 'unavailable';
+export type ReservationStatus = 'pending' | 'confirmed' | 'ongoing' | 'completed' | 'cancelled';
+
+export interface RentalObject {
+  id: string;
+  owner_id: string;
+  title: string;
+  description: string;
+  category: string;
+  price_per_day: number;
+  images: string[];
+  location: string;
+  latitude: number | null;
+  longitude: number | null;
+  status: ObjectStatus;
+  created_at: string;
+  updated_at: string;
+  owner?: Profile;
+}
+```
+
+## Workflows de développement
+
+### Ajouter une nouvelle fonctionnalité
+1. **Créer les types** dans `src/types/index.ts`
+2. **Ajouter le service** dans `src/services/`
+3. **Créer le hook personnalisé** dans `src/hooks/`
+4. **Développer les composants** dans `src/components/`
+5. **Ajouter la page** dans `src/pages/`
+6. **Configurer les routes** dans `src/App.tsx`
+7. **Tester et valider**
+
+### Créer un nouveau service API
+1. **Définir les interfaces** TypeScript
+2. **Implémenter les méthodes** CRUD
+3. **Gérer les erreurs** avec try/catch
+4. **Ajouter la validation** des données
+5. **Tester les appels** API
+
+### Ajouter une nouvelle table
+1. **Créer la migration** SQL dans `supabase/migrations/`
+2. **Définir les contraintes** et index
+3. **Configurer les policies RLS**
+4. **Ajouter les types** TypeScript
+5. **Créer le service** correspondant
+6. **Tester les permissions**
+
+## Dépendances à privilégier
+
+### UI/UX
+- **Tailwind CSS** pour le styling
+- **Lucide React** pour les icônes
+- **React Hot Toast** pour les notifications
+- **React Router** pour la navigation
+
+### État et données
+- **Supabase client** pour les APIs
+- **Hooks personnalisés** pour la logique métier
+- **React Query** (futur) pour le cache
+
+### Utilitaires
+- **Date-fns** pour la manipulation des dates
+- **Lodash** pour les utilitaires (si nécessaire)
+- **Zod** (futur) pour la validation de schémas
+
+## À éviter
+
+### Anti-patterns
+- **Props drilling** excessif
+- **useEffect** complexes avec plusieurs dépendances
+- **État global** inutile (Context API)
+- **Re-renders** excessifs
+- **Mutations directes** de l'état
+
+### Sécurité
+- **Données sensibles** dans le localStorage
+- **Validation uniquement côté client**
+- **Upload sans validation** des fichiers
+- **Requêtes non authentifiées** vers des APIs sensibles
+
+### Performance
+- **Re-renders** inutiles
+- **Requêtes API** non optimisées
+- **Images non compressées**
+- **Bundles** trop volumineux
+
+## Documentation
+
+### Code
+- **JSDoc** pour les fonctions complexes
+- **Commentaires** pour la logique métier
+- **Types explicites** plutôt que `any`
+- **Noms de variables** explicites
+
+### Composants
+- **Props documentées** avec TypeScript
+- **Exemples d'utilisation** en commentaires
+- **README** pour les composants complexes
+
+## Tests (futur)
+
+### Unitaires
+- **Jest** + **React Testing Library**
+- **Tests des hooks** personnalisés
+- **Tests des services** API
+- **Tests des utilitaires**
+
+### Intégration
+- **Tests des flux** utilisateur
+- **Tests des permissions** RLS
+- **Tests des paiements** Stripe
+
+## Déploiement
+
+### Variables d'environnement
+```env
+# Supabase
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Stripe
+VITE_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+```
+
+### Build
+- **Vite** pour le build optimisé
+- **TypeScript** strict mode
+- **ESLint** pour la qualité du code
+- **Tailwind** purging automatique
+
+Cette configuration guide l'IA pour maintenir la cohérence du code et respecter les bonnes pratiques établies dans le projet NeuroLoc.
