@@ -131,6 +131,46 @@ export const reservationsService = {
     if (error) throw error;
   },
 
+  async acceptReservation(id: string): Promise<Reservation> {
+    const { data, error } = await supabase
+      .from('reservations')
+      .update({
+        status: 'confirmed',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select(`
+        *,
+        object:objects(*),
+        renter:profiles!reservations_renter_id_fkey(*),
+        owner:profiles!reservations_owner_id_fkey(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async rejectReservation(id: string): Promise<Reservation> {
+    const { data, error } = await supabase
+      .from('reservations')
+      .update({
+        status: 'rejected',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select(`
+        *,
+        object:objects(*),
+        renter:profiles!reservations_renter_id_fkey(*),
+        owner:profiles!reservations_owner_id_fkey(*)
+      `)
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
   async confirmReservation(id: string, stripePaymentIntent: string): Promise<Reservation> {
     const { data, error } = await supabase
       .from('reservations')

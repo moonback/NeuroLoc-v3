@@ -6,7 +6,7 @@ import { reservationsService } from '../services/reservations.service';
 import { RentalObject, Reservation } from '../types';
 import { Loader } from '../components/common/Loader';
 import { ObjectCard } from '../components/objects/ObjectCard';
-import { Package, Calendar, Edit, Trash2, Euro, RefreshCw, AlertCircle } from 'lucide-react';
+import { Package, Calendar, Edit, Trash2, Euro, RefreshCw, AlertCircle, CheckCircle, XCircle, Clock } from 'lucide-react';
 import { DevelopmentModeBanner } from '../components/common/DevelopmentModeBanner';
 import { PaymentStatus } from '../components/payment/PaymentStatus';
 import toast from 'react-hot-toast';
@@ -76,7 +76,8 @@ export const Dashboard = () => {
       confirmed: 'bg-blue-100 text-blue-800',
       ongoing: 'bg-green-100 text-green-800',
       completed: 'bg-gray-100 text-gray-800',
-      cancelled: 'bg-red-100 text-red-800'
+      cancelled: 'bg-red-100 text-red-800',
+      rejected: 'bg-red-100 text-red-800'
     };
 
     const labels = {
@@ -84,7 +85,8 @@ export const Dashboard = () => {
       confirmed: 'Confirmée',
       ongoing: 'En cours',
       completed: 'Terminée',
-      cancelled: 'Annulée'
+      cancelled: 'Annulée',
+      rejected: 'Refusée'
     };
 
     return (
@@ -92,6 +94,28 @@ export const Dashboard = () => {
         {labels[status as keyof typeof labels]}
       </span>
     );
+  };
+
+  const handleAcceptReservation = async (reservationId: string) => {
+    try {
+      await reservationsService.acceptReservation(reservationId);
+      toast.success('✅ Réservation acceptée !');
+      loadData(); // Recharger les données
+    } catch (error: any) {
+      console.error('Error accepting reservation:', error);
+      toast.error('Erreur lors de l\'acceptation de la réservation');
+    }
+  };
+
+  const handleRejectReservation = async (reservationId: string) => {
+    try {
+      await reservationsService.rejectReservation(reservationId);
+      toast.success('❌ Réservation refusée');
+      loadData(); // Recharger les données
+    } catch (error: any) {
+      console.error('Error rejecting reservation:', error);
+      toast.error('Erreur lors du refus de la réservation');
+    }
   };
 
   if (loading) {
@@ -289,7 +313,45 @@ export const Dashboard = () => {
                               </div>
                             </div>
                           </div>
-                          {getStatusBadge(reservation.status)}
+                          <div className="flex flex-col items-end space-y-2">
+                            {getStatusBadge(reservation.status)}
+                            
+                            {/* Boutons d'action pour les réservations en attente */}
+                            {reservation.status === 'pending' && (
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleAcceptReservation(reservation.id)}
+                                  className="flex items-center space-x-1 px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                  <span>Accepter</span>
+                                </button>
+                                <button
+                                  onClick={() => handleRejectReservation(reservation.id)}
+                                  className="flex items-center space-x-1 px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm"
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                  <span>Refuser</span>
+                                </button>
+                              </div>
+                            )}
+                            
+                            {/* Message pour les réservations confirmées */}
+                            {reservation.status === 'confirmed' && (
+                              <div className="flex items-center space-x-1 text-green-600 text-sm">
+                                <CheckCircle className="h-4 w-4" />
+                                <span>Confirmée</span>
+                              </div>
+                            )}
+                            
+                            {/* Message pour les réservations refusées */}
+                            {reservation.status === 'rejected' && (
+                              <div className="flex items-center space-x-1 text-red-600 text-sm">
+                                <XCircle className="h-4 w-4" />
+                                <span>Refusée</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
