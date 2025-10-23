@@ -65,6 +65,7 @@ export interface Reservation {
   object?: RentalObject;
   renter?: Profile;
   owner?: Profile;
+  handovers?: Handover[];
 }
 
 export interface Message {

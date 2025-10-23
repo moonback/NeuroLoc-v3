@@ -137,10 +137,18 @@ export const ReservationHandovers = ({ reservationId, isOwner }: ReservationHand
             </div>
 
             <div className="mt-3 flex items-center justify-between">
-              {!isOwner && (
+              {!isOwner && handover.status === 'pending' && (
                 <div className="bg-gray-100 rounded px-2 py-1">
                   <p className="text-xs text-gray-500 font-mono">
                     {handover.qr_code.substring(0, 20)}...
+                  </p>
+                </div>
+              )}
+
+              {!isOwner && handover.status !== 'pending' && (
+                <div className="bg-green-50 border border-green-200 rounded px-2 py-1">
+                  <p className="text-xs text-green-600 font-medium">
+                    QR utilisé - {handover.status === 'picked_up' ? 'Récupéré' : 'Restitué'}
                   </p>
                 </div>
               )}

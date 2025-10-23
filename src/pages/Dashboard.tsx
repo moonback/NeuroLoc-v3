@@ -3,10 +3,10 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { objectsService } from '../services/objects.service';
 import { reservationsService } from '../services/reservations.service';
-import { RentalObject, Reservation } from '../types';
+import { RentalObject, Reservation, Handover } from '../types';
 import { Loader } from '../components/common/Loader';
 import { ObjectCard } from '../components/objects/ObjectCard';
-import { Package, Calendar, Edit, Trash2, Euro, RefreshCw, AlertCircle, CheckCircle, XCircle, QrCode } from 'lucide-react';
+import { Package, Calendar, Edit, Trash2, Euro, RefreshCw, AlertCircle, CheckCircle, XCircle, QrCode, User, Clock } from 'lucide-react';
 // import { DevelopmentModeBanner } from '../components/common/DevelopmentModeBanner';
 import { PaymentStatus } from '../components/payment/PaymentStatus';
 import { HandoversManager } from '../components/handovers/HandoversManager';
@@ -330,12 +330,43 @@ export const Dashboard = () => {
                               {reservation.object?.title}
                             </h3>
                             <div className="text-sm text-gray-600 space-y-1">
-                              <p>Locataire: {reservation.renter?.full_name}</p>
+                              <div className="flex items-center space-x-2">
+                                <User className="h-4 w-4 text-gray-500" />
+                                <Link 
+                                  to={`/profile/${reservation.renter?.id}`}
+                                  className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                                >
+                                  {reservation.renter?.full_name}
+                                </Link>
+                              </div>
                               <p>Du {new Date(reservation.start_date).toLocaleDateString('fr-FR')} au {new Date(reservation.end_date).toLocaleDateString('fr-FR')}</p>
                               <div className="flex items-center">
                                 <Euro className="h-4 w-4 mr-1" />
                                 <span className="font-medium">{reservation.total_price}€</span>
                               </div>
+                              
+                              {/* Informations de scan QR */}
+                              {reservation.handovers && reservation.handovers.length > 0 && (
+                                <div className="mt-2 space-y-1">
+                                  {reservation.handovers?.map((handover: Handover) => (
+                                    <div key={handover.id} className="flex items-center space-x-2 text-xs">
+                                      <Clock className="h-3 w-3 text-gray-500" />
+                                      <span className="text-gray-600">
+                                        {handover.type === 'pickup' ? 'Retrait' : 'Restitution'}:
+                                      </span>
+                                      {handover.actual_date ? (
+                                        <span className="text-green-600 font-medium">
+                                          {new Date(handover.actual_date).toLocaleString('fr-FR')}
+                                        </span>
+                                      ) : (
+                                        <span className="text-yellow-600">
+                                          En attente
+                                        </span>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </div>
                           <div className="flex flex-col items-end space-y-2">

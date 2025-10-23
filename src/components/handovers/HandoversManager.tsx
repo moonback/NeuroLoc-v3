@@ -139,12 +139,25 @@ export const HandoversManager = ({ reservationId, isOwner = false }: HandoversMa
                 )}
               </div>
 
-              {/* QR Code - Seulement pour les locataires */}
-              {!isOwner && (
+              {/* QR Code - Seulement pour les locataires et si pas encore utilisé */}
+              {!isOwner && handover.status === 'pending' && (
                 <div className="bg-gray-100 rounded-lg p-4 text-center">
                   <QrCode className="h-16 w-16 text-gray-600 mx-auto mb-2" />
                   <p className="text-xs text-gray-500 font-mono break-all">
                     {handover.qr_code}
+                  </p>
+                </div>
+              )}
+
+              {/* Message QR Code utilisé */}
+              {!isOwner && handover.status !== 'pending' && (
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4 text-center">
+                  <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-2" />
+                  <p className="text-sm text-green-700 font-medium">
+                    QR Code utilisé - {handover.status === 'picked_up' ? 'Objet récupéré' : 'Objet restitué'}
+                  </p>
+                  <p className="text-xs text-green-600 mt-1">
+                    Scanné le {handover.actual_date ? new Date(handover.actual_date).toLocaleDateString('fr-FR') : 'récemment'}
                   </p>
                 </div>
               )}

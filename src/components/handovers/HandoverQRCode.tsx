@@ -110,8 +110,8 @@ export const HandoverQRCode = ({ handover, isOwner = false }: HandoverQRCodeProp
         )}
       </div>
 
-      {/* QR Code - Seulement pour les locataires */}
-      {!isOwner && (
+      {/* QR Code - Seulement pour les locataires et si pas encore utilisé */}
+      {!isOwner && handover.status === 'pending' && (
         <div className="text-center mb-6">
           <div className="bg-gray-50 rounded-lg p-4 inline-block">
             {showQRCode ? (
@@ -121,22 +121,22 @@ export const HandoverQRCode = ({ handover, isOwner = false }: HandoverQRCodeProp
                   size={200}
                   className="mb-2"
                 />
-                 <div className="flex space-x-2 justify-center">
-                   <button
-                     onClick={handleDownloadQRCode}
-                     className="flex items-center space-x-1 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
-                   >
-                     <Download className="h-3 w-3" />
-                     <span>Télécharger</span>
-                   </button>
-                   <button
-                     onClick={handleShareQRCode}
-                     className="flex items-center space-x-1 px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
-                   >
-                     <Share2 className="h-3 w-3" />
-                     <span>Partager</span>
-                   </button>
-                 </div>
+                <div className="flex space-x-2 justify-center">
+                  <button
+                    onClick={handleDownloadQRCode}
+                    className="flex items-center space-x-1 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm"
+                  >
+                    <Download className="h-3 w-3" />
+                    <span>Télécharger</span>
+                  </button>
+                  <button
+                    onClick={handleShareQRCode}
+                    className="flex items-center space-x-1 px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
+                  >
+                    <Share2 className="h-3 w-3" />
+                    <span>Partager</span>
+                  </button>
+                </div>
               </div>
             ) : (
               <div className="space-y-4">
@@ -153,6 +153,21 @@ export const HandoverQRCode = ({ handover, isOwner = false }: HandoverQRCodeProp
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Message QR Code utilisé */}
+      {!isOwner && handover.status !== 'pending' && (
+        <div className="text-center mb-6">
+          <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+            <CheckCircle className="h-24 w-24 text-green-500 mx-auto mb-3" />
+            <p className="text-lg text-green-700 font-medium mb-2">
+              QR Code utilisé - {handover.status === 'picked_up' ? 'Objet récupéré' : 'Objet restitué'}
+            </p>
+            <p className="text-sm text-green-600">
+              Le QR code a été scanné avec succès le {handover.actual_date ? new Date(handover.actual_date).toLocaleDateString('fr-FR') : 'récemment'}
+            </p>
           </div>
         </div>
       )}
