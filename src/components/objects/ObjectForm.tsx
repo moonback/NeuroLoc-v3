@@ -6,8 +6,9 @@ import { useAuth } from '../../hooks/useAuth';
 import { AddressAutocomplete } from '../common/AddressAutocomplete';
 import { GeolocationButton, LocationDisplay } from '../common/GeolocationButton';
 import { ProfileLocationInfo } from '../common/ProfileLocationInfo';
+import { ImageUpload } from './ImageUpload';
 import { geolocationService } from '../../services/geolocation.service';
-import { MapPin } from 'lucide-react';
+import { MapPin, Camera } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const CATEGORIES: Category[] = [
@@ -36,7 +37,8 @@ export const ObjectForm = ({ initialData, onSubmit, submitLabel = 'Publier' }: O
     price_per_day: initialData?.price_per_day || 0,
     location: initialData?.location || '',
     latitude: initialData?.latitude,
-    longitude: initialData?.longitude
+    longitude: initialData?.longitude,
+    images: initialData?.images || []
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -190,6 +192,25 @@ export const ObjectForm = ({ initialData, onSubmit, submitLabel = 'Publier' }: O
         error={errors.price_per_day}
         required
       />
+
+      {/* Section Images */}
+      <div className="border-t pt-6">
+        <h3 className="text-lg font-medium text-gray-900 flex items-center mb-4">
+          <Camera className="h-5 w-5 mr-2" />
+          Images de l'objet
+        </h3>
+        
+        <ImageUpload
+          onImagesUploaded={(urls) => setFormData(prev => ({ ...prev, images: urls }))}
+          existingImages={formData.images || []}
+          maxImages={10}
+          disabled={isLoading}
+        />
+        
+        <p className="mt-2 text-xs text-gray-500">
+          Ajoutez jusqu'à 10 images pour mieux présenter votre objet. La première image sera utilisée comme image principale.
+        </p>
+      </div>
 
       {/* Section Localisation */}
       <div className="border-t pt-6">
