@@ -1,7 +1,7 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
-import { Menu, Home, Package, MessageSquare, User, LogOut, Plus, Settings, X, Search, Bell, ChevronDown } from 'lucide-react';
+import { Menu, Home, Package, MessageSquare, User, LogOut, Plus, Settings, X, Search, Bell, ChevronDown, HelpCircle } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
@@ -121,7 +121,12 @@ export const Navbar = () => {
 
             {/* Navigation desktop */}
             <div className="hidden lg:flex items-center space-x-3">
-              <NavLink to="/" icon={Home}>Accueil</NavLink>
+              {!user && (
+                <>
+                  <NavLink to="/" icon={Home}>Accueil</NavLink>
+                  <NavLink to="/how-it-works" icon={HelpCircle}>Comment ça marche</NavLink>
+                </>
+              )}
 
               {user ? (
                 <>
@@ -261,9 +266,16 @@ export const Navbar = () => {
               </div>
             )}
             
-            <NavLink to="/" icon={Home} className="w-full justify-start text-lg">
-              Accueil
-            </NavLink>
+            {!user && (
+              <>
+                <NavLink to="/" icon={Home} className="w-full justify-start text-lg">
+                  Accueil
+                </NavLink>
+                <NavLink to="/how-it-works" icon={HelpCircle} className="w-full justify-start text-lg">
+                  Comment ça marche
+                </NavLink>
+              </>
+            )}
             
             {user ? (
               <>
