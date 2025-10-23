@@ -2,7 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotifications } from '../../hooks/useNotifications';
 import { authService } from '../../services/auth.service';
-import { Menu, Home, Package, MessageSquare, User, LogOut, Plus, Settings, X, Search, Bell, ChevronDown, HelpCircle, Grid3X3 } from 'lucide-react';
+import { Menu, Home, Package, MessageSquare, User, LogOut, Plus, Settings, X, Search, Bell, ChevronDown, HelpCircle, Grid3X3, QrCode } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
@@ -135,6 +135,15 @@ export const Navbar = () => {
                   <NavLink to="/objects" icon={Grid3X3}>Objets</NavLink>
 
                   <NavLink to="/messages" icon={MessageSquare} badge={unreadCount}>Messages</NavLink>
+                  
+                  {/* Bouton scanner QR code */}
+                  <Link
+                    to="/qr-scanner"
+                    className="flex items-center justify-center w-10 h-10 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 group"
+                    title="Scanner QR Code"
+                  >
+                    <QrCode className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
+                  </Link>
                   
                   {/* Bouton de recherche */}
                   <button className="flex items-center justify-center w-10 h-10 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 group">
@@ -292,6 +301,13 @@ export const Navbar = () => {
                 
                 {/* Boutons d'action mobile */}
                 <div className="flex space-x-3 pt-2">
+                  <Link
+                    to="/qr-scanner"
+                    className="flex items-center justify-center w-12 h-12 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 group"
+                    title="Scanner QR Code"
+                  >
+                    <QrCode className="h-6 w-6 transition-transform duration-200 group-hover:scale-110" />
+                  </Link>
                   <button className="flex items-center justify-center w-12 h-12 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 group">
                     <Search className="h-6 w-6 transition-transform duration-200 group-hover:scale-110" />
                   </button>

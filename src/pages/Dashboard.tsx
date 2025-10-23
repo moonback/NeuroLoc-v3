@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { objectsService } from '../services/objects.service';
@@ -6,9 +6,12 @@ import { reservationsService } from '../services/reservations.service';
 import { RentalObject, Reservation } from '../types';
 import { Loader } from '../components/common/Loader';
 import { ObjectCard } from '../components/objects/ObjectCard';
-import { Package, Calendar, Edit, Trash2, Euro, RefreshCw, AlertCircle, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { Package, Calendar, Edit, Trash2, Euro, RefreshCw, AlertCircle, CheckCircle, XCircle, QrCode } from 'lucide-react';
 import { DevelopmentModeBanner } from '../components/common/DevelopmentModeBanner';
 import { PaymentStatus } from '../components/payment/PaymentStatus';
+import { HandoversManager } from '../components/handovers/HandoversManager';
+import { ReservationHandovers } from '../components/handovers/ReservationHandovers';
+import { AddressManager } from '../components/profile/AddressManager';
 import toast from 'react-hot-toast';
 
 export const Dashboard = () => {
@@ -18,20 +21,9 @@ export const Dashboard = () => {
   const [receivedReservations, setReceivedReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'objects' | 'reservations' | 'received'>('objects');
+  const [activeTab, setActiveTab] = useState<'objects' | 'reservations' | 'received' | 'handovers'>('objects');
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Recharger les données quand le profil change
-  useEffect(() => {
-    if (profile?.id) {
-      loadData();
-    }
-  }, [profile?.id]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -56,7 +48,18 @@ export const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [profile?.id]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Recharger les données quand le profil change
+  useEffect(() => {
+    if (profile?.id) {
+      loadData();
+    }
+  }, [profile?.id, loadData]);
 
   const handleDeleteObject = async (id: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cet objet ?')) return;
@@ -65,7 +68,7 @@ export const Dashboard = () => {
       await objectsService.deleteObject(id);
       toast.success('Objet supprimé avec succès');
       loadData();
-    } catch (error) {
+    } catch {
       toast.error('Erreur lors de la suppression');
     }
   };
@@ -101,7 +104,7 @@ export const Dashboard = () => {
       await reservationsService.acceptReservation(reservationId);
       toast.success('✅ Réservation acceptée !');
       loadData(); // Recharger les données
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error accepting reservation:', error);
       toast.error('Erreur lors de l\'acceptation de la réservation');
     }
@@ -112,7 +115,7 @@ export const Dashboard = () => {
       await reservationsService.rejectReservation(reservationId);
       toast.success('❌ Réservation refusée');
       loadData(); // Recharger les données
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error rejecting reservation:', error);
       toast.error('Erreur lors du refus de la réservation');
     }
@@ -206,6 +209,20 @@ export const Dashboard = () => {
                   <span>Réservations reçues ({receivedReservations.length})</span>
                 </div>
               </button>
+              
+              <button
+                onClick={() => setActiveTab('handovers')}
+                className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
+                  activeTab === 'handovers'
+                    ? 'border-blue-600 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <div className="flex items-center space-x-2">
+                  <QrCode className="h-5 w-5" />
+                  <span>Handovers</span>
+                </div>
+              </button>
             </nav>
           </div>
 
@@ -279,6 +296,14 @@ export const Dashboard = () => {
                             </div>
                           </div>
                           {getStatusBadge(reservation.status)}
+                        </div>
+                        
+                        {/* Handovers pour cette réservation */}
+                        <div className="mt-4">
+                          <ReservationHandovers 
+                            reservationId={reservation.id} 
+                            isOwner={false}
+                          />
                         </div>
                       </div>
                     ))}
@@ -357,6 +382,54 @@ export const Dashboard = () => {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'handovers' && (
+              <div className="space-y-6">
+                {/* Gestionnaire d'adresse */}
+                <AddressManager />
+                
+                {/* Liste des réservations avec handovers */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h3 className="text-lg font-semibold mb-4">Handovers par Réservation</h3>
+                  
+                  {receivedReservations.filter(r => r.status === 'confirmed').length === 0 ? (
+                    <div className="text-center py-8">
+                      <QrCode className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                      <p className="text-gray-500 mb-2">Aucune réservation confirmée</p>
+                      <p className="text-sm text-gray-400">
+                        Les handovers ne peuvent être créés que pour les réservations confirmées
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {receivedReservations
+                        .filter(reservation => reservation.status === 'confirmed')
+                        .map((reservation) => (
+                          <div key={reservation.id} className="border rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div>
+                                <h4 className="font-semibold text-lg">{reservation.object?.title}</h4>
+                                <p className="text-sm text-gray-600">
+                                  Locataire: {reservation.renter?.full_name}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  Du {new Date(reservation.start_date).toLocaleDateString('fr-FR')} au {new Date(reservation.end_date).toLocaleDateString('fr-FR')}
+                                </p>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Euro className="h-4 w-4 text-gray-600" />
+                                <span className="font-medium">{reservation.total_price}€</span>
+                              </div>
+                            </div>
+                            
+                            <HandoversManager reservationId={reservation.id} />
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
