@@ -1,9 +1,10 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Star, MessageSquare, Calendar, Euro, User, CheckCircle } from 'lucide-react';
 import { Reservation, Review } from '../../types';
 import { reviewsService } from '../../services/reviews.service';
 import { supabase } from '../../services/supabase';
 import { ReviewForm } from './ReviewForm';
+import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 
 interface CompletedReservationsProps {
@@ -12,6 +13,7 @@ interface CompletedReservationsProps {
 }
 
 export const CompletedReservations = ({ reservations, isOwner }: CompletedReservationsProps) => {
+  const { user } = useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [showReviewForm, setShowReviewForm] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -22,42 +24,43 @@ export const CompletedReservations = ({ reservations, isOwner }: CompletedReserv
     [reservations]
   );
 
-  const loadReviews = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      // Récupérer tous les avis pour les réservations terminées en une seule requête
-      const reservationIds = completedReservations.map(r => r.id);
-      
-      if (reservationIds.length === 0) {
-        setReviews([]);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('reviews')
-        .select(`
-          *,
-          reviewer:profiles!reviews_reviewer_id_fkey(*),
-          reviewed:profiles!reviews_reviewed_id_fkey(*),
-          reservation:reservations(*, object:objects(*))
-        `)
-        .in('reservation_id', reservationIds)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setReviews(data || []);
-    } catch (error) {
-      console.error('Error loading reviews:', error);
-      toast.error('Erreur lors du chargement des avis');
-    } finally {
-      setLoading(false);
-    }
-  }, [completedReservations]);
-
+  // Charger les avis avec useEffect directement
   useEffect(() => {
+    const loadReviews = async () => {
+      try {
+        setLoading(true);
+        
+        // Récupérer tous les avis pour les réservations terminées en une seule requête
+        const reservationIds = completedReservations.map(r => r.id);
+        
+        if (reservationIds.length === 0) {
+          setReviews([]);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from('reviews')
+          .select(`
+            *,
+            reviewer:profiles!reviews_reviewer_id_fkey(*),
+            reviewed:profiles!reviews_reviewed_id_fkey(*),
+            reservation:reservations(*, object:objects(*))
+          `)
+          .in('reservation_id', reservationIds)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setReviews(data || []);
+      } catch (error) {
+        console.error('Error loading reviews:', error);
+        toast.error('Erreur lors du chargement des avis');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadReviews();
-  }, [loadReviews]);
+  }, [completedReservations]);
 
   const hasUserReviewed = (reservationId: string, reviewerId: string) => {
     return reviews.some(review => 
@@ -100,7 +103,7 @@ export const CompletedReservations = ({ reservations, isOwner }: CompletedReserv
         {completedReservations.map((reservation) => {
           const otherUser = getOtherUser(reservation);
           const userToReview = getUserToReview(reservation);
-          const hasReviewed = hasUserReviewed(reservation.id, otherUser?.id || '');
+          const hasReviewed = hasUserReviewed(reservation.id, user?.id || '');
           
           return (
             <div key={reservation.id} className="border rounded-lg p-4 hover:shadow-md transition">
@@ -171,7 +174,30 @@ export const CompletedReservations = ({ reservations, isOwner }: CompletedReserv
                     objectTitle={reservation.object?.title || 'Objet'}
                     onReviewSubmitted={() => {
                       setShowReviewForm(null);
-                      loadReviews(); // Recharger les avis
+                      // Recharger les avis en refaisant la requête
+                      const reloadReviews = async () => {
+                        try {
+                          const reservationIds = completedReservations.map(r => r.id);
+                          if (reservationIds.length === 0) return;
+
+                          const { data, error } = await supabase
+                            .from('reviews')
+                            .select(`
+                              *,
+                              reviewer:profiles!reviews_reviewer_id_fkey(*),
+                              reviewed:profiles!reviews_reviewed_id_fkey(*),
+                              reservation:reservations(*, object:objects(*))
+                            `)
+                            .in('reservation_id', reservationIds)
+                            .order('created_at', { ascending: false });
+
+                          if (error) throw error;
+                          setReviews(data || []);
+                        } catch (error) {
+                          console.error('Error reloading reviews:', error);
+                        }
+                      };
+                      reloadReviews();
                     }}
                     onCancel={() => setShowReviewForm(null)}
                   />
