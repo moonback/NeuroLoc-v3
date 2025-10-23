@@ -19,6 +19,12 @@ export interface Profile {
   avatar_url: string | null;
   phone: string | null;
   bio: string | null;
+  address: string | null;
+  city: string | null;
+  postal_code: string | null;
+  country: string | null;
+  latitude: number | null;
+  longitude: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -145,4 +151,30 @@ export interface AuthCredentials {
 
 export interface SignupCredentials extends AuthCredentials {
   full_name: string;
+}
+
+export interface GeocodeResult {
+  address: string;
+  city: string;
+  postal_code: string;
+  country: string;
+  latitude: number;
+  longitude: number;
+  formatted_address: string;
+}
+
+export interface LocationData {
+  latitude: number;
+  longitude: number;
+  accuracy?: number;
+  timestamp?: number;
+}
+
+export interface AddressComponents {
+  street_number?: string;
+  route?: string;
+  locality?: string;
+  administrative_area_level_1?: string;
+  country?: string;
+  postal_code?: string;
 }

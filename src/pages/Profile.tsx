@@ -5,8 +5,11 @@ import { Profile as ProfileType } from '../types';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { Loader } from '../components/common/Loader';
-import { User, Mail, Calendar, Camera, Save, Edit3, Lock, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Calendar, Camera, Save, Edit3, Lock, Eye, EyeOff, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { AddressAutocomplete } from '../components/common/AddressAutocomplete';
+import { GeolocationButton, LocationDisplay } from '../components/common/GeolocationButton';
+import { geolocationService } from '../services/geolocation.service';
 
 export const Profile = () => {
   const { user, profile, refreshProfile } = useAuth();
@@ -21,7 +24,13 @@ export const Profile = () => {
     full_name: '',
     phone: '',
     bio: '',
-    avatar_url: ''
+    avatar_url: '',
+    address: '',
+    city: '',
+    postal_code: '',
+    country: '',
+    latitude: null,
+    longitude: null
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -36,7 +45,13 @@ export const Profile = () => {
         full_name: profile.full_name || '',
         phone: profile.phone || '',
         bio: profile.bio || '',
-        avatar_url: profile.avatar_url || ''
+        avatar_url: profile.avatar_url || '',
+        address: profile.address || '',
+        city: profile.city || '',
+        postal_code: profile.postal_code || '',
+        country: profile.country || '',
+        latitude: profile.latitude,
+        longitude: profile.longitude
       });
     }
   }, [profile]);
@@ -54,6 +69,42 @@ export const Profile = () => {
     setPasswordData(prev => ({
       ...prev,
       [name]: value
+    }));
+  };
+
+  const handleAddressSelect = async (selectedAddress: string, formattedAddress: string) => {
+    try {
+      setLoading(true);
+      const geocodeResult = await geolocationService.geocodeAddress(formattedAddress);
+      
+      setFormData(prev => ({
+        ...prev,
+        address: geocodeResult.address,
+        city: geocodeResult.city,
+        postal_code: geocodeResult.postal_code,
+        country: geocodeResult.country,
+        latitude: geocodeResult.latitude,
+        longitude: geocodeResult.longitude
+      }));
+      
+      toast.success('Adresse géocodée avec succès');
+    } catch (error) {
+      console.error('Geocoding error:', error);
+      toast.error('Erreur lors du géocodage de l\'adresse');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLocationDetected = (address: string, city: string, postalCode: string, country: string, lat: number, lng: number) => {
+    setFormData(prev => ({
+      ...prev,
+      address,
+      city,
+      postal_code: postalCode,
+      country,
+      latitude: lat,
+      longitude: lng
     }));
   };
 
@@ -263,6 +314,89 @@ export const Profile = () => {
                   disabled={!isEditing}
                   placeholder="Votre numéro de téléphone"
                 />
+              </div>
+
+              {/* Section Géolocalisation */}
+              <div className="border-t pt-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-medium text-gray-900 flex items-center">
+                    <MapPin className="h-5 w-5 mr-2" />
+                    Localisation
+                  </h3>
+                  {isEditing && (
+                    <GeolocationButton
+                      onLocationFound={handleLocationDetected}
+                      disabled={loading}
+                    />
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Adresse
+                    </label>
+                    {isEditing ? (
+                      <AddressAutocomplete
+                        value={formData.address || ''}
+                        onChange={(value) => setFormData(prev => ({ ...prev, address: value }))}
+                        onSelect={handleAddressSelect}
+                        placeholder="Rechercher votre adresse..."
+                        disabled={loading}
+                      />
+                    ) : (
+                      <div className="px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-700">
+                        {formData.address || 'Non renseignée'}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Input
+                        label="Ville"
+                        name="city"
+                        value={formData.city || ''}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                        placeholder="Votre ville"
+                      />
+                    </div>
+                    <div>
+                      <Input
+                        label="Code postal"
+                        name="postal_code"
+                        value={formData.postal_code || ''}
+                        onChange={handleInputChange}
+                        disabled={!isEditing}
+                        placeholder="Code postal"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <Input
+                      label="Pays"
+                      name="country"
+                      value={formData.country || ''}
+                      onChange={handleInputChange}
+                      disabled={!isEditing}
+                      placeholder="Votre pays"
+                    />
+                  </div>
+
+                  {/* Affichage des coordonnées */}
+                  {formData.latitude && formData.longitude && (
+                    <LocationDisplay
+                      address={formData.address || undefined}
+                      city={formData.city || undefined}
+                      postalCode={formData.postal_code || undefined}
+                      country={formData.country || undefined}
+                      latitude={formData.latitude || undefined}
+                      longitude={formData.longitude || undefined}
+                    />
+                  )}
+                </div>
               </div>
 
               <div>
