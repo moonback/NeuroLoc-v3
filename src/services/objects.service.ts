@@ -58,6 +58,8 @@ export const objectsService = {
   },
 
   async getObjectsByOwner(ownerId: string): Promise<RentalObject[]> {
+    console.log('objectsService.getObjectsByOwner called with:', ownerId);
+    
     const { data, error } = await supabase
       .from('objects')
       .select(`
@@ -66,6 +68,8 @@ export const objectsService = {
       `)
       .eq('owner_id', ownerId)
       .order('created_at', { ascending: false });
+
+    console.log('objectsService.getObjectsByOwner result:', { data, error });
 
     if (error) throw error;
     return data || [];
