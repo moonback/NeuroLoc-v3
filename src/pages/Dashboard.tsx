@@ -24,15 +24,27 @@ export const Dashboard = () => {
   const loadData = async () => {
     try {
       setLoading(true);
+      console.log('Dashboard: Loading data...', { profile: profile?.id });
+      
       if (profile) {
         const [objects, rentals, received] = await Promise.all([
           objectsService.getObjectsByOwner(profile.id),
           reservationsService.getReservationsAsRenter(),
           reservationsService.getReservationsAsOwner()
         ]);
+        
+        console.log('Dashboard: Data loaded:', { 
+          objects: objects.length, 
+          rentals: rentals.length, 
+          received: received.length,
+          objectsData: objects
+        });
+        
         setMyObjects(objects);
         setMyReservations(rentals);
         setReceivedReservations(received);
+      } else {
+        console.log('Dashboard: No profile found');
       }
     } catch (error) {
       console.error('Error loading dashboard data:', error);

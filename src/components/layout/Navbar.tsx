@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { authService } from '../../services/auth.service';
-import { Menu, Home, Package, MessageSquare, User, LogOut, Plus } from 'lucide-react';
+import { Menu, Home, Package, MessageSquare, User, LogOut, Plus, Settings } from 'lucide-react';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -53,6 +53,13 @@ export const Navbar = () => {
                 >
                   <MessageSquare className="h-5 w-5" />
                   <span>Messages</span>
+                </Link>
+                <Link
+                  to="/profile"
+                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition"
+                >
+                  <Settings className="h-5 w-5" />
+                  <span>Profil</span>
                 </Link>
                 <Link
                   to="/objects/new"
@@ -121,6 +128,13 @@ export const Navbar = () => {
                   onClick={() => setIsMenuOpen(false)}
                 >
                   Messages
+                </Link>
+                <Link
+                  to="/profile"
+                  className="block text-gray-700 hover:text-blue-600"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Profil
                 </Link>
                 <Link
                   to="/objects/new"
