@@ -12,6 +12,8 @@ import { ObjectDetails } from './pages/ObjectDetails';
 import { CreateObject } from './pages/CreateObject';
 import { EditObject } from './pages/EditObject';
 import { Messages } from './pages/Messages';
+import { Profile } from './pages/Profile';
+import { PublicProfile } from './pages/PublicProfile';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -38,6 +40,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             <Route path="/objects/:id" element={<ObjectDetails />} />
+            <Route path="/profile/:userId" element={<PublicProfile />} />
 
             <Route
               path="/dashboard"
@@ -68,6 +71,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Messages />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <Profile />
                 </ProtectedRoute>
               }
             />

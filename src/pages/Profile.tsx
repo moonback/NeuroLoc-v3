@@ -1,0 +1,429 @@
+import { useState, useEffect } from 'react';
+import { useAuth } from '../hooks/useAuth';
+import { authService } from '../services/auth.service';
+import { Profile as ProfileType } from '../types';
+import { Button } from '../components/common/Button';
+import { Input } from '../components/common/Input';
+import { Loader } from '../components/common/Loader';
+import { User, Mail, Calendar, Camera, Save, Edit3, Lock, Eye, EyeOff } from 'lucide-react';
+import toast from 'react-hot-toast';
+
+export const Profile = () => {
+  const { user, profile, refreshProfile } = useAuth();
+  const [isEditing, setIsEditing] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const [formData, setFormData] = useState<Partial<ProfileType>>({
+    full_name: '',
+    phone: '',
+    bio: '',
+    avatar_url: ''
+  });
+
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+
+  useEffect(() => {
+    if (profile) {
+      setFormData({
+        full_name: profile.full_name || '',
+        phone: profile.phone || '',
+        bio: profile.bio || '',
+        avatar_url: profile.avatar_url || ''
+      });
+    }
+  }, [profile]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('La taille du fichier ne doit pas dépasser 5MB');
+      return;
+    }
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Veuillez sélectionner un fichier image');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const avatarUrl = await authService.uploadAvatar(user.id, file);
+      setFormData(prev => ({
+        ...prev,
+        avatar_url: avatarUrl
+      }));
+      toast.success('Photo de profil mise à jour');
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast.error('Erreur lors du téléchargement de la photo');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+
+    try {
+      setLoading(true);
+      await authService.updateProfile(user.id, formData as Partial<ProfileType>);
+      await refreshProfile();
+      setIsEditing(false);
+      toast.success('Profil mis à jour avec succès');
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast.error('Erreur lors de la mise à jour du profil');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error('Les mots de passe ne correspondent pas');
+      return;
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast.error('Le mot de passe doit contenir au moins 6 caractères');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await authService.updatePassword(passwordData.newPassword);
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      setIsChangingPassword(false);
+      toast.success('Mot de passe mis à jour avec succès');
+    } catch (error) {
+      console.error('Error changing password:', error);
+      toast.error('Erreur lors du changement de mot de passe');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader size="lg" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="bg-white rounded-lg shadow-md mb-8">
+          <div className="px-6 py-8">
+            <div className="flex items-center space-x-6">
+              <div className="relative">
+                <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                  {formData.avatar_url ? (
+                    <img
+                      src={formData.avatar_url}
+                      alt="Photo de profil"
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="h-12 w-12 text-gray-400" />
+                  )}
+                </div>
+                {isEditing && (
+                  <label className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 transition">
+                    <Camera className="h-4 w-4" />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarUpload}
+                      className="hidden"
+                    />
+                  </label>
+                )}
+              </div>
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  {profile.full_name || 'Utilisateur'}
+                </h1>
+                <p className="text-gray-600 mb-4">{profile.email}</p>
+                <div className="flex items-center text-sm text-gray-500">
+                  <Calendar className="h-4 w-4 mr-2" />
+                  Membre depuis {formatDate(profile.created_at)}
+                </div>
+              </div>
+              <div className="flex space-x-3">
+                {!isEditing ? (
+                  <Button
+                    onClick={() => setIsEditing(true)}
+                    variant="secondary"
+                    className="flex items-center space-x-2"
+                  >
+                    <Edit3 className="h-4 w-4" />
+                    <span>Modifier</span>
+                  </Button>
+                ) : (
+                  <div className="flex space-x-2">
+                    <Button
+                      onClick={() => setIsEditing(false)}
+                      variant="ghost"
+                    >
+                      Annuler
+                    </Button>
+                    <Button
+                      onClick={handleSaveProfile}
+                      isLoading={loading}
+                      className="flex items-center space-x-2"
+                    >
+                      <Save className="h-4 w-4" />
+                      <span>Sauvegarder</span>
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* Informations personnelles */}
+          <div className="bg-white rounded-lg shadow-md">
+            <div className="px-6 py-4 border-b">
+              <h2 className="text-xl font-semibold text-gray-900">Informations personnelles</h2>
+            </div>
+            <div className="p-6 space-y-6">
+              <div>
+                <Input
+                  label="Nom complet"
+                  name="full_name"
+                  value={formData.full_name || ''}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  placeholder="Votre nom complet"
+                />
+              </div>
+
+              <div>
+                <Input
+                  label="Email"
+                  name="email"
+                  value={profile.email}
+                  disabled
+                  className="bg-gray-50"
+                />
+                <p className="mt-1 text-sm text-gray-500">
+                  L'email ne peut pas être modifié
+                </p>
+              </div>
+
+              <div>
+                <Input
+                  label="Téléphone"
+                  name="phone"
+                  value={formData.phone || ''}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  placeholder="Votre numéro de téléphone"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Biographie
+                </label>
+                <textarea
+                  name="bio"
+                  value={formData.bio || ''}
+                  onChange={handleInputChange}
+                  disabled={!isEditing}
+                  placeholder="Parlez-nous de vous..."
+                  rows={4}
+                  className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                    !isEditing ? 'bg-gray-50 border-gray-200' : 'border-gray-300'
+                  }`}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Sécurité */}
+          <div className="bg-white rounded-lg shadow-md">
+            <div className="px-6 py-4 border-b">
+              <h2 className="text-xl font-semibold text-gray-900">Sécurité</h2>
+            </div>
+            <div className="p-6">
+              {!isChangingPassword ? (
+                <div className="text-center py-8">
+                  <Lock className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    Mot de passe
+                  </h3>
+                  <p className="text-gray-600 mb-4">
+                    Changez votre mot de passe pour sécuriser votre compte
+                  </p>
+                  <Button
+                    onClick={() => setIsChangingPassword(true)}
+                    variant="secondary"
+                  >
+                    Changer le mot de passe
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Changer le mot de passe
+                  </h3>
+                  
+                  <div className="relative">
+                    <Input
+                      label="Mot de passe actuel"
+                      name="currentPassword"
+                      type={showCurrentPassword ? 'text' : 'password'}
+                      value={passwordData.currentPassword}
+                      onChange={handlePasswordChange}
+                      placeholder="Votre mot de passe actuel"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute right-3 top-8 text-gray-400 hover:text-gray-600"
+                    >
+                      {showCurrentPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+
+                  <div className="relative">
+                    <Input
+                      label="Nouveau mot de passe"
+                      name="newPassword"
+                      type={showNewPassword ? 'text' : 'password'}
+                      value={passwordData.newPassword}
+                      onChange={handlePasswordChange}
+                      placeholder="Votre nouveau mot de passe"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3 top-8 text-gray-400 hover:text-gray-600"
+                    >
+                      {showNewPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+
+                  <div className="relative">
+                    <Input
+                      label="Confirmer le nouveau mot de passe"
+                      name="confirmPassword"
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      value={passwordData.confirmPassword}
+                      onChange={handlePasswordChange}
+                      placeholder="Confirmez votre nouveau mot de passe"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3 top-8 text-gray-400 hover:text-gray-600"
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+
+                  <div className="flex space-x-3 pt-4">
+                    <Button
+                      onClick={() => setIsChangingPassword(false)}
+                      variant="ghost"
+                      className="flex-1"
+                    >
+                      Annuler
+                    </Button>
+                    <Button
+                      onClick={handleChangePassword}
+                      isLoading={loading}
+                      className="flex-1"
+                    >
+                      Mettre à jour
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Statistiques */}
+        <div className="mt-8 bg-white rounded-lg shadow-md">
+          <div className="px-6 py-4 border-b">
+            <h2 className="text-xl font-semibold text-gray-900">Statistiques</h2>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="text-center">
+                <div className="bg-blue-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
+                  <User className="h-8 w-8 text-blue-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Profil</h3>
+                <p className="text-sm text-gray-600">Complété à 100%</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="bg-green-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
+                  <Calendar className="h-8 w-8 text-green-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Membre depuis</h3>
+                <p className="text-sm text-gray-600">{formatDate(profile.created_at)}</p>
+              </div>
+              
+              <div className="text-center">
+                <div className="bg-purple-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-3">
+                  <Mail className="h-8 w-8 text-purple-600" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900">Email vérifié</h3>
+                <p className="text-sm text-gray-600">
+                  {user?.email_confirmed_at ? 'Oui' : 'Non'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
