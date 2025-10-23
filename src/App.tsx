@@ -16,7 +16,7 @@ import { EditObject } from './pages/EditObject';
 import { Messages } from './pages/Messages';
 import { Profile } from './pages/Profile';
 import { PublicProfile } from './pages/PublicProfile';
-import { QRCodeScanner } from './pages/QRCodeScanner';
+import { QRCodeScannerPage } from './pages/QRCodeScanner';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -71,7 +71,7 @@ function App() {
               path="/qr-scanner"
               element={
                 <ProtectedRoute>
-                  <QRCodeScanner />
+                  <QRCodeScannerPage />
                 </ProtectedRoute>
               }
             />

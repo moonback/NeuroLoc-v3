@@ -4,47 +4,13 @@ import { Handover, HandoverStatus } from '../../types';
 import { QRCodeGenerator } from '../common/QRCodeGenerator';
 import toast from 'react-hot-toast';
 
-interface QRCodeDisplayProps {
+interface HandoverQRCodeProps {
   handover: Handover;
   isOwner?: boolean;
 }
 
-export const QRCodeDisplay = ({ handover, isOwner = false }: QRCodeDisplayProps) => {
+export const HandoverQRCode = ({ handover, isOwner = false }: HandoverQRCodeProps) => {
   const [showQRCode, setShowQRCode] = useState(false);
-
-  const handleDownloadQRCode = () => {
-    const canvas = document.querySelector('canvas');
-    if (canvas) {
-      const link = document.createElement('a');
-      link.download = `handover-${handover.id}-qr.png`;
-      link.href = canvas.toDataURL();
-      link.click();
-      toast.success('QR Code téléchargé !');
-    }
-  };
-
-  const handleShareQRCode = async () => {
-    if (navigator.share) {
-      try {
-        const canvas = document.querySelector('canvas');
-        if (canvas) {
-          const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve));
-          if (blob) {
-            await navigator.share({
-              title: `QR Code Handover - ${handover.type === 'pickup' ? 'Retrait' : 'Restitution'}`,
-              text: `QR Code pour le ${handover.type === 'pickup' ? 'retrait' : 'restitution'} de ${handover.reservation?.object?.title}`,
-              files: [new File([blob], `handover-${handover.id}-qr.png`, { type: 'image/png' })]
-            });
-          }
-        }
-      } catch (error) {
-        console.error('Error sharing:', error);
-        toast.error('Erreur lors du partage');
-      }
-    } else {
-      toast.error('Le partage n\'est pas supporté sur cet appareil');
-    }
-  };
 
   const getStatusColor = (status: HandoverStatus) => {
     switch (status) {
@@ -76,6 +42,37 @@ export const QRCodeDisplay = ({ handover, isOwner = false }: QRCodeDisplayProps)
     }
   };
 
+  const handleDownloadQRCode = () => {
+    const canvas = document.querySelector('canvas');
+    if (canvas) {
+      const link = document.createElement('a');
+      link.download = `handover-${handover.id}-qr.png`;
+      link.href = canvas.toDataURL();
+      link.click();
+      toast.success('QR Code téléchargé !');
+    }
+  };
+
+  const handleShareQRCode = async () => {
+    if (navigator.share) {
+      try {
+        const canvas = document.querySelector('canvas');
+        if (canvas) {
+          const blob = await new Promise<Blob>(resolve => canvas.toBlob(resolve!));
+          await navigator.share({
+            title: `QR Code Handover - ${handover.type === 'pickup' ? 'Retrait' : 'Restitution'}`,
+            text: `QR Code pour le ${handover.type === 'pickup' ? 'retrait' : 'restitution'} de ${handover.reservation?.object?.title}`,
+            files: [new File([blob!], `handover-${handover.id}-qr.png`, { type: 'image/png' })]
+          });
+        }
+      } catch (error) {
+        console.error('Error sharing:', error);
+        toast.error('Erreur lors du partage');
+      }
+    } else {
+      toast.error('Le partage n\'est pas supporté sur cet appareil');
+    }
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-lg p-6">

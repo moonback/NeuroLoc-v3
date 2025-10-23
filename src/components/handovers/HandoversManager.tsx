@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Package, Calendar, MapPin, QrCode, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { Package, Calendar, MapPin, QrCode, Clock, CheckCircle, ScanLine } from 'lucide-react';
 import { Handover, HandoverStatus } from '../../types';
 import { handoversService } from '../../services/handovers.service';
 import { QRCodeDisplay } from './QRCodeDisplay';
@@ -8,9 +8,10 @@ import toast from 'react-hot-toast';
 
 interface HandoversManagerProps {
   reservationId: string;
+  isOwner?: boolean;
 }
 
-export const HandoversManager = ({ reservationId }: HandoversManagerProps) => {
+export const HandoversManager = ({ reservationId, isOwner = false }: HandoversManagerProps) => {
   const [handovers, setHandovers] = useState<Handover[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,16 +31,6 @@ export const HandoversManager = ({ reservationId }: HandoversManagerProps) => {
     }
   };
 
-  const handleStatusUpdate = async (handoverId: string, status: HandoverStatus) => {
-    try {
-      await handoversService.updateHandoverStatus(handoverId, status);
-      toast.success('Statut mis à jour avec succès !');
-      loadHandovers(); // Recharger les données
-    } catch (error) {
-      console.error('Error updating handover status:', error);
-      toast.error('Erreur lors de la mise à jour du statut');
-    }
-  };
 
   const getStatusIcon = (status: HandoverStatus) => {
     switch (status) {
@@ -83,10 +74,19 @@ export const HandoversManager = ({ reservationId }: HandoversManagerProps) => {
           <QrCode className="h-6 w-6 text-blue-600" />
           <h2 className="text-xl font-semibold">Gestion des Handovers</h2>
         </div>
-        <CreateHandoverForm 
-          reservationId={reservationId} 
-          onHandoverCreated={loadHandovers}
-        />
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={() => window.open('/qr-scanner', '_blank')}
+            className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+          >
+            <ScanLine className="h-4 w-4" />
+            <span>Scanner QR Code</span>
+          </button>
+          <CreateHandoverForm 
+            reservationId={reservationId} 
+            onHandoverCreated={loadHandovers}
+          />
+        </div>
       </div>
 
       {/* Liste des handovers */}
@@ -139,43 +139,35 @@ export const HandoversManager = ({ reservationId }: HandoversManagerProps) => {
                 )}
               </div>
 
-              {/* QR Code simplifié */}
-              <div className="bg-gray-100 rounded-lg p-4 text-center">
-                <QrCode className="h-16 w-16 text-gray-600 mx-auto mb-2" />
-                <p className="text-xs text-gray-500 font-mono break-all">
-                  {handover.qr_code}
-                </p>
-              </div>
+              {/* QR Code - Seulement pour les locataires */}
+              {!isOwner && (
+                <div className="bg-gray-100 rounded-lg p-4 text-center">
+                  <QrCode className="h-16 w-16 text-gray-600 mx-auto mb-2" />
+                  <p className="text-xs text-gray-500 font-mono break-all">
+                    {handover.qr_code}
+                  </p>
+                </div>
+              )}
 
-              {/* Actions rapides */}
+              {/* Instructions QR Code */}
               {handover.status === 'pending' && (
-                <div className="mt-4 grid grid-cols-2 gap-2">
-                  <button
-                    onClick={() => handleStatusUpdate(handover.id, 'picked_up')}
-                    className="flex items-center justify-center space-x-1 bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition text-sm"
-                  >
-                    <CheckCircle className="h-4 w-4" />
-                    <span>Confirmer</span>
-                  </button>
-                  
-                  <button
-                    onClick={() => handleStatusUpdate(handover.id, 'cancelled')}
-                    className="flex items-center justify-center space-x-1 bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition text-sm"
-                  >
-                    <XCircle className="h-4 w-4" />
-                    <span>Annuler</span>
-                  </button>
+                <div className="mt-4 space-y-2">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <p className="text-sm text-yellow-800">
+                      <strong>Instructions :</strong> Présentez le QR code au propriétaire/locataire. Le scan QR code validera automatiquement le {handover.type === 'pickup' ? 'retrait' : 'restitution'}.
+                    </p>
+                  </div>
                 </div>
               )}
 
               {handover.status === 'picked_up' && handover.type === 'pickup' && (
-                <button
-                  onClick={() => handleStatusUpdate(handover.id, 'returned')}
-                  className="w-full mt-4 flex items-center justify-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-                >
-                  <CheckCircle className="h-4 w-4" />
-                  <span>Marquer comme restitué</span>
-                </button>
+                <div className="mt-4 space-y-2">
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p className="text-sm text-blue-800">
+                      <strong>Prochaine étape :</strong> Scannez le QR code de restitution pour valider automatiquement la restitution de l'objet.
+                    </p>
+                  </div>
+                </div>
               )}
             </div>
           ))}

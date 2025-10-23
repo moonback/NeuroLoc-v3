@@ -424,7 +424,7 @@ export const Dashboard = () => {
                               </div>
                             </div>
                             
-                            <HandoversManager reservationId={reservation.id} />
+                            <HandoversManager reservationId={reservation.id} isOwner={true} />
                           </div>
                         ))}
                     </div>

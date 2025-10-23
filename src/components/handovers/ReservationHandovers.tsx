@@ -137,11 +137,13 @@ export const ReservationHandovers = ({ reservationId, isOwner }: ReservationHand
             </div>
 
             <div className="mt-3 flex items-center justify-between">
-              <div className="bg-gray-100 rounded px-2 py-1">
-                <p className="text-xs text-gray-500 font-mono">
-                  {handover.qr_code.substring(0, 20)}...
-                </p>
-              </div>
+              {!isOwner && (
+                <div className="bg-gray-100 rounded px-2 py-1">
+                  <p className="text-xs text-gray-500 font-mono">
+                    {handover.qr_code.substring(0, 20)}...
+                  </p>
+                </div>
+              )}
               
               <button
                 onClick={() => setSelectedHandover(handover)}
@@ -172,10 +174,7 @@ export const ReservationHandovers = ({ reservationId, isOwner }: ReservationHand
               
               <QRCodeDisplay 
                 handover={selectedHandover}
-                onStatusUpdate={(handoverId, status) => {
-                  // Mettre à jour le statut et recharger
-                  loadHandovers();
-                }}
+                isOwner={isOwner}
               />
             </div>
           </div>
