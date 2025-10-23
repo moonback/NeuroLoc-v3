@@ -7,6 +7,8 @@ import { RentalObject, Reservation } from '../types';
 import { Loader } from '../components/common/Loader';
 import { ObjectCard } from '../components/objects/ObjectCard';
 import { Package, Calendar, Edit, Trash2, Euro, RefreshCw, AlertCircle } from 'lucide-react';
+import { DevelopmentModeBanner } from '../components/common/DevelopmentModeBanner';
+import { PaymentStatus } from '../components/payment/PaymentStatus';
 import toast from 'react-hot-toast';
 
 export const Dashboard = () => {
@@ -131,6 +133,12 @@ export const Dashboard = () => {
             </div>
           )}
         </div>
+
+        {/* Banner de mode développement */}
+        <DevelopmentModeBanner />
+
+        {/* Statut du paiement simulé */}
+        <PaymentStatus />
 
         <div className="bg-white rounded-lg shadow-md mb-8">
           <div className="border-b">

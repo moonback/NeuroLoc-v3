@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useObject } from '../hooks/useObjects';
 import { reservationsService } from '../services/reservations.service';
-import { stripeService } from '../services/stripe.service';
+import { paymentService } from '../services/payment.service';
 import { messagesService } from '../services/messages.service';
 import { Loader } from '../components/common/Loader';
 import { Button } from '../components/common/Button';
@@ -60,7 +60,7 @@ export const ObjectDetails = () => {
         total_price: totalPrice
       });
 
-      await stripeService.handlePayment(
+      await paymentService.handlePayment(
         reservation.id,
         Math.round(totalPrice * 100),
         object.title

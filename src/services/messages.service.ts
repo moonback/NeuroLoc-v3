@@ -159,5 +159,37 @@ export const messagesService = {
 
     if (error) throw error;
     return count || 0;
+  },
+
+  subscribeToAllMessages(callback: (message: Message) => void) {
+    const subscription = supabase
+      .channel('all_messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages'
+        },
+        async (payload) => {
+          const { data, error } = await supabase
+            .from('messages')
+            .select(`
+              *,
+              sender:profiles!messages_sender_id_fkey(*),
+              receiver:profiles!messages_receiver_id_fkey(*),
+              object:objects(*)
+            `)
+            .eq('id', payload.new.id)
+            .single();
+
+          if (!error && data) {
+            callback(data);
+          }
+        }
+      )
+      .subscribe();
+
+    return subscription;
   }
 };

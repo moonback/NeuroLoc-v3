@@ -1,5 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
+import { useNotifications } from '../../hooks/useNotifications';
 import { authService } from '../../services/auth.service';
 import { Menu, Home, Package, MessageSquare, User, LogOut, Plus, Settings, X, Search, Bell, ChevronDown, HelpCircle, Grid3X3 } from 'lucide-react';
 import { useState, useEffect } from 'react';
@@ -7,12 +8,12 @@ import toast from 'react-hot-toast';
 
 export const Navbar = () => {
   const { user } = useAuth();
+  const { unreadCount } = useNotifications();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const [notificationCount] = useState(3); // Simulé pour la démo
 
   // Gestion du scroll pour l'effet de transparence
   useEffect(() => {
@@ -133,7 +134,7 @@ export const Navbar = () => {
                   <NavLink to="/dashboard" icon={User}>Tableau de bord</NavLink>
                   <NavLink to="/objects" icon={Grid3X3}>Objets</NavLink>
 
-                  <NavLink to="/messages" icon={MessageSquare} badge={notificationCount}>Messages</NavLink>
+                  <NavLink to="/messages" icon={MessageSquare} badge={unreadCount}>Messages</NavLink>
                   
                   {/* Bouton de recherche */}
                   <button className="flex items-center justify-center w-10 h-10 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 group">
@@ -143,9 +144,9 @@ export const Navbar = () => {
                   {/* Bouton de notifications */}
                   <button className="relative flex items-center justify-center w-10 h-10 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 group">
                     <Bell className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
-                    {notificationCount > 0 && (
+                    {unreadCount > 0 && (
                       <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse">
-                        {notificationCount > 9 ? '9+' : notificationCount}
+                        {unreadCount > 9 ? '9+' : unreadCount}
                       </div>
                     )}
                   </button>
@@ -285,7 +286,7 @@ export const Navbar = () => {
                 <NavLink to="/dashboard" icon={User} className="w-full justify-start text-lg">
                   Tableau de bord
                 </NavLink>
-                <NavLink to="/messages" icon={MessageSquare} badge={notificationCount} className="w-full justify-start text-lg">
+                <NavLink to="/messages" icon={MessageSquare} badge={unreadCount} className="w-full justify-start text-lg">
                   Messages
                 </NavLink>
                 
@@ -296,9 +297,9 @@ export const Navbar = () => {
                   </button>
                   <button className="relative flex items-center justify-center w-12 h-12 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 group">
                     <Bell className="h-6 w-6 transition-transform duration-200 group-hover:scale-110" />
-                    {notificationCount > 0 && (
+                    {unreadCount > 0 && (
                       <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse">
-                        {notificationCount > 9 ? '9+' : notificationCount}
+                        {unreadCount > 9 ? '9+' : unreadCount}
                       </div>
                     )}
                   </button>
