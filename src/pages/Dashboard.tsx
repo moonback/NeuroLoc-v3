@@ -7,7 +7,7 @@ import { RentalObject, Reservation } from '../types';
 import { Loader } from '../components/common/Loader';
 import { ObjectCard } from '../components/objects/ObjectCard';
 import { Package, Calendar, Edit, Trash2, Euro, RefreshCw, AlertCircle, CheckCircle, XCircle, QrCode } from 'lucide-react';
-import { DevelopmentModeBanner } from '../components/common/DevelopmentModeBanner';
+// import { DevelopmentModeBanner } from '../components/common/DevelopmentModeBanner';
 import { PaymentStatus } from '../components/payment/PaymentStatus';
 import { HandoversManager } from '../components/handovers/HandoversManager';
 import { ReservationHandovers } from '../components/handovers/ReservationHandovers';
@@ -162,7 +162,7 @@ export const Dashboard = () => {
         </div>
 
         {/* Banner de mode développement */}
-        <DevelopmentModeBanner />
+        {/* <DevelopmentModeBanner /> */}
 
         {/* Statut du paiement simulé */}
         <PaymentStatus />
