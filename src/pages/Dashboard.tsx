@@ -6,8 +6,11 @@ import { objectsService } from '../services/objects.service';
 import { reservationsService } from '../services/reservations.service';
 import { RentalObject, Reservation, Handover } from '../types';
 import { Loader } from '../components/common/Loader';
+import { Button } from '../components/common/Button';
+import { Card, CardContent, CardHeader } from '../components/common/Card';
+import { Badge } from '../components/common/Badge';
 import { ObjectCard } from '../components/objects/ObjectCard';
-import { Package, Calendar, Edit, Trash2, Euro, RefreshCw, AlertCircle, CheckCircle, XCircle, QrCode, User, Clock, Star } from 'lucide-react';
+import { Package, Calendar, Edit, Trash2, Euro, RefreshCw, AlertCircle, CheckCircle, XCircle, QrCode, User, Clock, Star, Plus } from 'lucide-react';
 // import { DevelopmentModeBanner } from '../components/common/DevelopmentModeBanner';
 import { PaymentStatus } from '../components/payment/PaymentStatus';
 import { HandoversManager } from '../components/handovers/HandoversManager';
@@ -109,13 +112,13 @@ export const Dashboard = () => {
   };
 
   const getStatusBadge = (status: string) => {
-    const badges = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      confirmed: 'bg-blue-100 text-blue-800',
-      ongoing: 'bg-green-100 text-green-800',
-      completed: 'bg-gray-100 text-gray-800',
-      cancelled: 'bg-red-100 text-red-800',
-      rejected: 'bg-red-100 text-red-800'
+    const variants = {
+      pending: 'warning' as const,
+      confirmed: 'brand' as const,
+      ongoing: 'success' as const,
+      completed: 'default' as const,
+      cancelled: 'danger' as const,
+      rejected: 'danger' as const
     };
 
     const labels = {
@@ -128,17 +131,17 @@ export const Dashboard = () => {
     };
 
     return (
-      <span className={`px-3 py-1 rounded-full text-sm font-medium ${badges[status as keyof typeof badges]}`}>
+      <Badge variant={variants[status as keyof typeof variants]}>
         {labels[status as keyof typeof labels]}
-      </span>
+      </Badge>
     );
   };
 
   const getObjectStatusBadge = (status: string) => {
-    const badges = {
-      available: 'bg-green-100 text-green-800',
-      rented: 'bg-blue-100 text-blue-800',
-      unavailable: 'bg-red-100 text-red-800'
+    const variants = {
+      available: 'success' as const,
+      rented: 'brand' as const,
+      unavailable: 'danger' as const
     };
 
     const labels = {
@@ -148,9 +151,9 @@ export const Dashboard = () => {
     };
 
     return (
-      <span className={`px-3 py-1 rounded-full text-sm font-medium ${badges[status as keyof typeof badges]}`}>
+      <Badge variant={variants[status as keyof typeof variants]}>
         {labels[status as keyof typeof labels]}
-      </span>
+      </Badge>
     );
   };
 
@@ -179,49 +182,52 @@ export const Dashboard = () => {
 
   if (loading || authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader size="lg" />
+      <div className="min-h-screen flex items-center justify-center bg-neutral-50">
+        <Card className="p-8">
+          <CardContent className="flex flex-col items-center gap-4">
+            <Loader size="lg" />
+            <p className="text-neutral-600">Chargement de votre tableau de bord...</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-neutral-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
         <div className="mb-8">
-          <div className="flex justify-between items-start">
+          <div className="flex justify-between items-start mb-6">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold text-neutral-900 mb-2">
                 Bienvenue, {profile?.full_name || 'Utilisateur'}
               </h1>
-              <p className="text-gray-600">Gérez vos objets et vos réservations</p>
+              <p className="text-neutral-600">Gérez vos objets et vos réservations</p>
             </div>
-            <div className="flex space-x-2">
-              <button
-                onClick={loadData}
-                disabled={loading}
-                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-                <span className="text-white">Actualiser</span>
-              </button>
-              
-            </div>
+            <Button
+              onClick={loadData}
+              disabled={loading}
+              variant="secondary"
+              leftIcon={<RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />}
+            >
+              Actualiser
+            </Button>
           </div>
           
           {/* Statistiques de rôle */}
-          <div className="mt-6">
-            <RoleStats />
-          </div>
+          <RoleStats />
           
           {error && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center space-x-3">
-              <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
-              <div>
-                <p className="text-red-800 font-medium">Erreur de chargement</p>
-                <p className="text-red-600 text-sm">{error}</p>
-              </div>
-            </div>
+            <Card className="mt-6 border-accent-200 bg-accent-50">
+              <CardContent className="flex items-center gap-3 p-4">
+                <AlertCircle className="h-5 w-5 text-accent-600 flex-shrink-0" />
+                <div>
+                  <p className="text-accent-800 font-medium">Erreur de chargement</p>
+                  <p className="text-accent-600 text-sm">{error}</p>
+                </div>
+              </CardContent>
+            </Card>
           )}
         </div>
 
@@ -231,48 +237,49 @@ export const Dashboard = () => {
         {/* Statut du paiement simulé */}
         <PaymentStatus />
 
-        <div className="bg-white rounded-lg shadow-md mb-8">
-          <div className="border-b">
-            <nav className="flex space-x-8 px-6">
+        {/* Navigation par onglets */}
+        <Card className="mb-8">
+          <CardHeader className="border-b border-neutral-200">
+            <nav className="flex space-x-8">
               {isLoueur && (
                 <button
                   onClick={() => setActiveTab('objects')}
-                  className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
+                  className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors duration-200 ${
                     activeTab === 'objects'
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                      ? 'border-brand-500 text-brand-600'
+                      : 'border-transparent text-neutral-500 hover:text-neutral-700'
                   }`}
                 >
-                  <div className="flex items-center space-x-2">
-                    <Package className="h-5 w-5" />
+                  <div className="flex items-center gap-2">
+                    <Package className="h-4 w-4" />
                     <span>Mes objets ({myObjects.length})</span>
                   </div>
                 </button>
               )}
               <button
                 onClick={() => setActiveTab('reservations')}
-                className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
+                className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors duration-200 ${
                   activeTab === 'reservations'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-brand-500 text-brand-600'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-700'
                 }`}
               >
-                <div className="flex items-center space-x-2">
-                  <Calendar className="h-5 w-5" />
+                <div className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
                   <span>Mes locations ({myReservations.length})</span>
                 </div>
               </button>
               {isLoueur && (
                 <button
                   onClick={() => setActiveTab('received')}
-                  className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
+                  className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors duration-200 ${
                     activeTab === 'received'
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                      ? 'border-brand-500 text-brand-600'
+                      : 'border-transparent text-neutral-500 hover:text-neutral-700'
                   }`}
                 >
-                  <div className="flex items-center space-x-2">
-                    <Calendar className="h-5 w-5" />
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
                     <span>Réservations reçues ({receivedReservations.length})</span>
                   </div>
                 </button>
@@ -281,14 +288,14 @@ export const Dashboard = () => {
               {isLoueur && (
                 <button
                   onClick={() => setActiveTab('handovers')}
-                  className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
+                  className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors duration-200 ${
                     activeTab === 'handovers'
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                      ? 'border-brand-500 text-brand-600'
+                      : 'border-transparent text-neutral-500 hover:text-neutral-700'
                   }`}
                 >
-                  <div className="flex items-center space-x-2">
-                    <QrCode className="h-5 w-5" />
+                  <div className="flex items-center gap-2">
+                    <QrCode className="h-4 w-4" />
                     <span>Handovers</span>
                   </div>
                 </button>
@@ -296,60 +303,67 @@ export const Dashboard = () => {
               
               <button
                 onClick={() => setActiveTab('reviews')}
-                className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
+                className={`py-4 px-2 border-b-2 font-medium text-sm transition-colors duration-200 ${
                   activeTab === 'reviews'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-brand-500 text-brand-600'
+                    : 'border-transparent text-neutral-500 hover:text-neutral-700'
                 }`}
               >
-                <div className="flex items-center space-x-2">
-                  <Star className="h-5 w-5" />
+                <div className="flex items-center gap-2">
+                  <Star className="h-4 w-4" />
                   <span>Avis</span>
                 </div>
               </button>
             </nav>
-          </div>
+          </CardHeader>
 
-          <div className="p-6">
+          <CardContent className="p-6">
             {activeTab === 'objects' && (
               <div>
                 <div className="flex justify-between items-center mb-6">
-                  <h2 className="text-xl font-semibold">Mes objets</h2>
-                  <Link
-                    to="/objects/new"
-                    className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-                  >
-                    Ajouter un objet
+                  <h2 className="text-heading text-xl font-semibold">Mes objets</h2>
+                  <Link to="/objects/new">
+                    <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />}>
+                      Ajouter un objet
+                    </Button>
                   </Link>
                 </div>
 
                 {myObjects.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Vous n'avez pas encore d'objets</p>
-                  </div>
+                  <Card className="text-center py-12">
+                    <CardContent>
+                      <Package className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-neutral-600 mb-2">Aucun objet</h3>
+                      <p className="text-neutral-500 mb-6">Commencez par publier votre premier objet</p>
+                      <Link to="/objects/new">
+                        <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />}>
+                          Publier un objet
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {myObjects.map((object) => (
                       <div key={object.id} className="relative">
                         <ObjectCard object={object} />
                         {/* Badge de statut de l'objet */}
-                        <div className="absolute top-2 right-2">
+                        <div className="absolute top-3 right-3">
                           {getObjectStatusBadge(object.status)}
                         </div>
                         {/* Boutons d'action */}
-                        <div className="absolute top-2 left-2 flex space-x-2">
+                        <div className="absolute top-3 left-3 flex gap-2">
                           <Link
                             to={`/objects/${object.id}/edit`}
-                            className="bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition"
+                            className="w-8 h-8 bg-white rounded-lg shadow-soft flex items-center justify-center hover:bg-neutral-50 transition-colors duration-200"
                           >
-                            <Edit className="h-4 w-4 text-blue-600" />
+                            <Edit className="h-4 w-4 text-brand-600" />
                           </Link>
                           <button
                             onClick={() => handleDeleteObject(object.id)}
-                            className="bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition"
+                            className="w-8 h-8 bg-white rounded-lg shadow-soft flex items-center justify-center hover:bg-neutral-50 transition-colors duration-200"
                           >
-                            <Trash2 className="h-4 w-4 text-red-600" />
+                            <Trash2 className="h-4 w-4 text-accent-600" />
                           </button>
                         </div>
                       </div>
@@ -361,40 +375,50 @@ export const Dashboard = () => {
 
             {activeTab === 'reservations' && (
               <div>
-                <h2 className="text-xl font-semibold mb-6">Mes locations</h2>
+                <h2 className="text-heading text-xl font-semibold mb-6">Mes locations</h2>
                 {myReservations.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Vous n'avez pas encore de réservations</p>
-                  </div>
+                  <Card className="text-center py-12">
+                    <CardContent>
+                      <Calendar className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-neutral-600 mb-2">Aucune réservation</h3>
+                      <p className="text-neutral-500 mb-6">Vous n'avez pas encore fait de réservations</p>
+                      <Link to="/objects">
+                        <Button variant="primary" leftIcon={<Package className="h-4 w-4" />}>
+                          Découvrir les objets
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
                 ) : (
                   <div className="space-y-4">
                     {myReservations.map((reservation) => (
-                      <div key={reservation.id} className="border rounded-lg p-4 hover:shadow-md transition">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-lg mb-2">
-                              {reservation.object?.title}
-                            </h3>
-                            <div className="text-sm text-gray-600 space-y-1">
-                              <p>Du {new Date(reservation.start_date).toLocaleDateString('fr-FR')} au {new Date(reservation.end_date).toLocaleDateString('fr-FR')}</p>
-                              <div className="flex items-center">
-                                <Euro className="h-4 w-4 mr-1" />
-                                <span className="font-medium">{reservation.total_price}€</span>
+                      <Card key={reservation.id} className="card-hover">
+                        <CardContent className="p-6">
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="flex-1">
+                              <h3 className="text-heading text-lg font-semibold mb-2">
+                                {reservation.object?.title}
+                              </h3>
+                              <div className="text-body text-sm space-y-2">
+                                <p>Du {new Date(reservation.start_date).toLocaleDateString('fr-FR')} au {new Date(reservation.end_date).toLocaleDateString('fr-FR')}</p>
+                                <div className="flex items-center gap-1">
+                                  <Euro className="h-4 w-4" />
+                                  <span className="font-medium">{reservation.total_price}€</span>
+                                </div>
                               </div>
                             </div>
+                            {getStatusBadge(reservation.status)}
                           </div>
-                          {getStatusBadge(reservation.status)}
-                        </div>
-                        
-                        {/* Handovers pour cette réservation */}
-                        <div className="mt-4">
-                          <ReservationHandovers 
-                            reservationId={reservation.id} 
-                            isOwner={false}
-                          />
-                        </div>
-                      </div>
+                          
+                          {/* Handovers pour cette réservation */}
+                          <div className="border-t border-neutral-200 pt-4">
+                            <ReservationHandovers 
+                              reservationId={reservation.id} 
+                              isOwner={false}
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
                     ))}
                   </div>
                 )}
@@ -403,102 +427,114 @@ export const Dashboard = () => {
 
             {activeTab === 'received' && (
               <div>
-                <h2 className="text-xl font-semibold mb-6">Réservations reçues</h2>
+                <h2 className="text-heading text-xl font-semibold mb-6">Réservations reçues</h2>
                 {receivedReservations.length === 0 ? (
-                  <div className="text-center py-12">
-                    <Calendar className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Aucune réservation reçue</p>
-                  </div>
+                  <Card className="text-center py-12">
+                    <CardContent>
+                      <Calendar className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-neutral-600 mb-2">Aucune réservation</h3>
+                      <p className="text-neutral-500 mb-6">Vous n'avez pas encore reçu de réservations</p>
+                      <Link to="/objects/new">
+                        <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />}>
+                          Publier un objet
+                        </Button>
+                      </Link>
+                    </CardContent>
+                  </Card>
                 ) : (
                   <div className="space-y-4">
                     {receivedReservations.map((reservation) => (
-                      <div key={reservation.id} className="border rounded-lg p-4 hover:shadow-md transition">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="font-semibold text-lg mb-2">
-                              {reservation.object?.title}
-                            </h3>
-                            <div className="text-sm text-gray-600 space-y-1">
-                              <div className="flex items-center space-x-2">
-                                <User className="h-4 w-4 text-gray-500" />
-                                <Link 
-                                  to={`/profile/${reservation.renter?.id}`}
-                                  className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
-                                >
-                                  {reservation.renter?.full_name}
-                                </Link>
+                      <Card key={reservation.id} className="card-hover">
+                        <CardContent className="p-6">
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="flex-1">
+                              <h3 className="text-heading text-lg font-semibold mb-2">
+                                {reservation.object?.title}
+                              </h3>
+                              <div className="text-body text-sm space-y-2">
+                                <div className="flex items-center gap-2">
+                                  <User className="h-4 w-4 text-neutral-500" />
+                                  <Link 
+                                    to={`/profile/${reservation.renter?.id}`}
+                                    className="text-brand-600 hover:text-brand-700 hover:underline font-medium"
+                                  >
+                                    {reservation.renter?.full_name}
+                                  </Link>
+                                </div>
+                                <p>Du {new Date(reservation.start_date).toLocaleDateString('fr-FR')} au {new Date(reservation.end_date).toLocaleDateString('fr-FR')}</p>
+                                <div className="flex items-center gap-1">
+                                  <Euro className="h-4 w-4" />
+                                  <span className="font-medium">{reservation.total_price}€</span>
+                                </div>
+                                
+                                {/* Informations de scan QR */}
+                                {reservation.handovers && reservation.handovers.length > 0 && (
+                                  <div className="mt-3 space-y-1">
+                                    {reservation.handovers?.map((handover: Handover) => (
+                                      <div key={handover.id} className="flex items-center gap-2 text-xs">
+                                        <Clock className="h-3 w-3 text-neutral-500" />
+                                        <span className="text-neutral-600">
+                                          {handover.type === 'pickup' ? 'Retrait' : 'Restitution'}:
+                                        </span>
+                                        {handover.actual_date ? (
+                                          <span className="text-success-600 font-medium">
+                                            {new Date(handover.actual_date).toLocaleString('fr-FR')}
+                                          </span>
+                                        ) : (
+                                          <span className="text-warning-600">
+                                            En attente
+                                          </span>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
-                              <p>Du {new Date(reservation.start_date).toLocaleDateString('fr-FR')} au {new Date(reservation.end_date).toLocaleDateString('fr-FR')}</p>
-                              <div className="flex items-center">
-                                <Euro className="h-4 w-4 mr-1" />
-                                <span className="font-medium">{reservation.total_price}€</span>
-                              </div>
+                            </div>
+                            <div className="flex flex-col items-end gap-3">
+                              {getStatusBadge(reservation.status)}
                               
-                              {/* Informations de scan QR */}
-                              {reservation.handovers && reservation.handovers.length > 0 && (
-                                <div className="mt-2 space-y-1">
-                                  {reservation.handovers?.map((handover: Handover) => (
-                                    <div key={handover.id} className="flex items-center space-x-2 text-xs">
-                                      <Clock className="h-3 w-3 text-gray-500" />
-                                      <span className="text-gray-600">
-                                        {handover.type === 'pickup' ? 'Retrait' : 'Restitution'}:
-                                      </span>
-                                      {handover.actual_date ? (
-                                        <span className="text-green-600 font-medium">
-                                          {new Date(handover.actual_date).toLocaleString('fr-FR')}
-                                        </span>
-                                      ) : (
-                                        <span className="text-yellow-600">
-                                          En attente
-                                        </span>
-                                      )}
-                                    </div>
-                                  ))}
+                              {/* Boutons d'action pour les réservations en attente */}
+                              {reservation.status === 'pending' && (
+                                <div className="flex gap-2">
+                                  <Button
+                                    onClick={() => handleAcceptReservation(reservation.id)}
+                                    variant="primary"
+                                    size="sm"
+                                    leftIcon={<CheckCircle className="h-4 w-4" />}
+                                  >
+                                    Accepter
+                                  </Button>
+                                  <Button
+                                    onClick={() => handleRejectReservation(reservation.id)}
+                                    variant="danger"
+                                    size="sm"
+                                    leftIcon={<XCircle className="h-4 w-4" />}
+                                  >
+                                    Refuser
+                                  </Button>
+                                </div>
+                              )}
+                              
+                              {/* Message pour les réservations confirmées */}
+                              {reservation.status === 'confirmed' && (
+                                <div className="flex items-center gap-1 text-success-600 text-sm">
+                                  <CheckCircle className="h-4 w-4" />
+                                  <span>Confirmée</span>
+                                </div>
+                              )}
+                              
+                              {/* Message pour les réservations refusées */}
+                              {reservation.status === 'rejected' && (
+                                <div className="flex items-center gap-1 text-accent-600 text-sm">
+                                  <XCircle className="h-4 w-4" />
+                                  <span>Refusée</span>
                                 </div>
                               )}
                             </div>
                           </div>
-                          <div className="flex flex-col items-end space-y-2">
-                            {getStatusBadge(reservation.status)}
-                            
-                            {/* Boutons d'action pour les réservations en attente */}
-                            {reservation.status === 'pending' && (
-                              <div className="flex space-x-2">
-                                <button
-                                  onClick={() => handleAcceptReservation(reservation.id)}
-                                  className="flex items-center space-x-1 px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
-                                >
-                                  <CheckCircle className="h-4 w-4" />
-                                  <span>Accepter</span>
-                                </button>
-                                <button
-                                  onClick={() => handleRejectReservation(reservation.id)}
-                                  className="flex items-center space-x-1 px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm"
-                                >
-                                  <XCircle className="h-4 w-4" />
-                                  <span>Refuser</span>
-                                </button>
-                              </div>
-                            )}
-                            
-                            {/* Message pour les réservations confirmées */}
-                            {reservation.status === 'confirmed' && (
-                              <div className="flex items-center space-x-1 text-green-600 text-sm">
-                                <CheckCircle className="h-4 w-4" />
-                                <span>Confirmée</span>
-                              </div>
-                            )}
-                            
-                            {/* Message pour les réservations refusées */}
-                            {reservation.status === 'rejected' && (
-                              <div className="flex items-center space-x-1 text-red-600 text-sm">
-                                <XCircle className="h-4 w-4" />
-                                <span>Refusée</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+                        </CardContent>
+                      </Card>
                     ))}
                   </div>
                 )}
@@ -511,45 +547,50 @@ export const Dashboard = () => {
                 <AddressManager />
                 
                 {/* Liste des réservations avec handovers */}
-                <div className="bg-white rounded-xl shadow-lg p-6">
-                  <h3 className="text-lg font-semibold mb-4">Handovers par Réservation</h3>
-                  
-                  {receivedReservations.filter(r => r.status === 'confirmed').length === 0 ? (
-                    <div className="text-center py-8">
-                      <QrCode className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                      <p className="text-gray-500 mb-2">Aucune réservation confirmée</p>
-                      <p className="text-sm text-gray-400">
-                        Les handovers ne peuvent être créés que pour les réservations confirmées
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {receivedReservations
-                        .filter(reservation => reservation.status === 'confirmed')
-                        .map((reservation) => (
-                          <div key={reservation.id} className="border rounded-lg p-4">
-                            <div className="flex items-center justify-between mb-3">
-                              <div>
-                                <h4 className="font-semibold text-lg">{reservation.object?.title}</h4>
-                                <p className="text-sm text-gray-600">
-                                  Locataire: {reservation.renter?.full_name}
-                                </p>
-                                <p className="text-sm text-gray-600">
-                                  Du {new Date(reservation.start_date).toLocaleDateString('fr-FR')} au {new Date(reservation.end_date).toLocaleDateString('fr-FR')}
-                                </p>
-                              </div>
-                              <div className="flex items-center space-x-2">
-                                <Euro className="h-4 w-4 text-gray-600" />
-                                <span className="font-medium">{reservation.total_price}€</span>
-                              </div>
-                            </div>
-                            
-                            <HandoversManager reservationId={reservation.id} isOwner={true} />
-                          </div>
-                        ))}
-                    </div>
-                  )}
-                </div>
+                <Card>
+                  <CardHeader>
+                    <h3 className="text-heading text-lg font-semibold">Handovers par Réservation</h3>
+                  </CardHeader>
+                  <CardContent>
+                    {receivedReservations.filter(r => r.status === 'confirmed').length === 0 ? (
+                      <div className="text-center py-8">
+                        <QrCode className="h-12 w-12 text-neutral-300 mx-auto mb-3" />
+                        <h3 className="text-lg font-medium text-neutral-600 mb-2">Aucune réservation confirmée</h3>
+                        <p className="text-neutral-500 text-sm">
+                          Les handovers ne peuvent être créés que pour les réservations confirmées
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {receivedReservations
+                          .filter(reservation => reservation.status === 'confirmed')
+                          .map((reservation) => (
+                            <Card key={reservation.id} className="border-neutral-200">
+                              <CardContent className="p-4">
+                                <div className="flex items-center justify-between mb-4">
+                                  <div>
+                                    <h4 className="text-heading text-lg font-semibold">{reservation.object?.title}</h4>
+                                    <p className="text-body text-sm">
+                                      Locataire: {reservation.renter?.full_name}
+                                    </p>
+                                    <p className="text-body text-sm">
+                                      Du {new Date(reservation.start_date).toLocaleDateString('fr-FR')} au {new Date(reservation.end_date).toLocaleDateString('fr-FR')}
+                                    </p>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Euro className="h-4 w-4 text-neutral-600" />
+                                    <span className="font-medium">{reservation.total_price}€</span>
+                                  </div>
+                                </div>
+                                
+                                <HandoversManager reservationId={reservation.id} isOwner={true} />
+                              </CardContent>
+                            </Card>
+                          ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
             )}
 
@@ -568,8 +609,8 @@ export const Dashboard = () => {
                 />
               </div>
             )}
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
