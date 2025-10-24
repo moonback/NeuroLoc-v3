@@ -1,13 +1,13 @@
 import { useRole } from '../../hooks/useRole';
 import { RoleBadge } from '../common/RoleBadge';
-import { User, Store, TrendingUp, CheckCircle, AlertCircle } from 'lucide-react';
+import { User, Store, TrendingUp, CheckCircle } from 'lucide-react';
 
 interface RoleStatsProps {
   className?: string;
 }
 
 export const RoleStats = ({ className = '' }: RoleStatsProps) => {
-  const { role, isVerified, getRoleDisplayName, getRoleIcon } = useRole();
+  const { role, isVerified } = useRole();
 
   const getRoleStats = () => {
     switch (role) {
@@ -97,16 +97,7 @@ export const RoleStats = ({ className = '' }: RoleStatsProps) => {
         </div>
       )}
 
-      {!isVerified && (
-        <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <div className="flex items-center space-x-2">
-            <AlertCircle className="h-4 w-4 text-yellow-600" />
-            <p className="text-sm text-yellow-800">
-              <strong>Compte non vérifié :</strong> Certaines fonctionnalités peuvent être limitées.
-            </p>
-          </div>
-        </div>
-      )}
+      
     </div>
   );
 };
