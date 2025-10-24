@@ -47,7 +47,7 @@ export const QRCodeScannerPage = () => {
       const result = await handoversService.scanQRCode(code);
       if (result) {
         setHandover(result);
-        toast.success('Handover trouvé !');
+        // toast.success('Handover trouvé !');
         
         // Validation automatique selon le statut et le type
         if (result.status === 'pending') {

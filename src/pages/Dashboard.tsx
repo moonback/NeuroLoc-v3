@@ -4,17 +4,17 @@ import { useAuth } from '../hooks/useAuth';
 import { useRole } from '../hooks/useRole';
 import { objectsService } from '../services/objects.service';
 import { reservationsService } from '../services/reservations.service';
-import { RentalObject, Reservation, Handover } from '../types';
+import { RentalObject, Reservation } from '../types';
 import { Loader } from '../components/common/Loader';
 import { Button } from '../components/common/Button';
 import { Card, CardContent, CardHeader } from '../components/common/Card';
 import { Badge } from '../components/common/Badge';
 import { ObjectCard } from '../components/objects/ObjectCard';
-import { Package, Calendar, Edit, Trash2, Euro, RefreshCw, AlertCircle, CheckCircle, XCircle, QrCode, User, Clock, Star, Plus } from 'lucide-react';
+import { Package, Calendar, Edit, Trash2, Euro, RefreshCw, AlertCircle, QrCode, Star, Plus } from 'lucide-react';
 // import { DevelopmentModeBanner } from '../components/common/DevelopmentModeBanner';
 import { PaymentStatus } from '../components/payment/PaymentStatus';
 import { HandoversManager } from '../components/handovers/HandoversManager';
-import { ReservationHandovers } from '../components/handovers/ReservationHandovers';
+import { ReservationCard, ReceivedReservationCard } from '../components/reservations';
 import { AddressManager } from '../components/profile/AddressManager';
 import { CompletedReservations } from '../components/profile/CompletedReservations';
 import { RoleStats } from '../components/profile/RoleStats';
@@ -86,7 +86,7 @@ export const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  }, [profile?.id, profile?.role]);
+  }, [profile?.id, profile?.role, isLoueur]);
 
   // Charger les données quand le profil est disponible
   useEffect(() => {
@@ -97,7 +97,7 @@ export const Dashboard = () => {
     } else {
       console.log('❌ Conditions not met', { authLoading, profileId: profile?.id });
     }
-  }, [profile?.id, authLoading, loadData]);
+  }, [profile?.id, authLoading, loadData, isLoueur]);
 
   const handleDeleteObject = async (id: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cet objet ?')) return;
@@ -108,6 +108,28 @@ export const Dashboard = () => {
       loadData();
     } catch {
       toast.error('Erreur lors de la suppression');
+    }
+  };
+
+  const handleAcceptReservation = async (id: string) => {
+    try {
+      await reservationsService.acceptReservation(id);
+      toast.success('Réservation acceptée');
+      loadData();
+    } catch {
+      toast.error('Erreur lors de l\'acceptation');
+    }
+  };
+
+  const handleRejectReservation = async (id: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir refuser cette réservation ?')) return;
+    
+    try {
+      await reservationsService.rejectReservation(id);
+      toast.success('Réservation refusée');
+      loadData();
+    } catch {
+      toast.error('Erreur lors du refus');
     }
   };
 
@@ -157,27 +179,6 @@ export const Dashboard = () => {
     );
   };
 
-  const handleAcceptReservation = async (reservationId: string) => {
-    try {
-      await reservationsService.acceptReservation(reservationId);
-      toast.success('✅ Réservation acceptée !');
-      loadData(); // Recharger les données
-    } catch (error: unknown) {
-      console.error('Error accepting reservation:', error);
-      toast.error('Erreur lors de l\'acceptation de la réservation');
-    }
-  };
-
-  const handleRejectReservation = async (reservationId: string) => {
-    try {
-      await reservationsService.rejectReservation(reservationId);
-      toast.success('❌ Réservation refusée');
-      loadData(); // Recharger les données
-    } catch (error: unknown) {
-      console.error('Error rejecting reservation:', error);
-      toast.error('Erreur lors du refus de la réservation');
-    }
-  };
 
 
   if (loading || authLoading) {
@@ -185,7 +186,7 @@ export const Dashboard = () => {
       <div className="min-h-screen flex items-center justify-center bg-neutral-50">
         <Card className="p-8">
           <CardContent className="flex flex-col items-center gap-4">
-            <Loader size="lg" />
+        <Loader size="lg" />
             <p className="text-neutral-600">Chargement de votre tableau de bord...</p>
           </CardContent>
         </Card>
@@ -206,8 +207,8 @@ export const Dashboard = () => {
               <p className="text-neutral-600">Gérez vos objets et vos réservations</p>
             </div>
             <Button
-              onClick={loadData}
-              disabled={loading}
+                onClick={loadData}
+                disabled={loading}
               variant="secondary"
               leftIcon={<RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />}
             >
@@ -216,16 +217,16 @@ export const Dashboard = () => {
           </div>
           
           {/* Statistiques de rôle */}
-          <RoleStats />
+            <RoleStats />
           
           {error && (
             <Card className="mt-6 border-accent-200 bg-accent-50">
               <CardContent className="flex items-center gap-3 p-4">
                 <AlertCircle className="h-5 w-5 text-accent-600 flex-shrink-0" />
-                <div>
+              <div>
                   <p className="text-accent-800 font-medium">Erreur de chargement</p>
                   <p className="text-accent-600 text-sm">{error}</p>
-                </div>
+              </div>
               </CardContent>
             </Card>
           )}
@@ -324,7 +325,7 @@ export const Dashboard = () => {
                   <h2 className="text-heading text-xl font-semibold">Mes objets</h2>
                   <Link to="/objects/new">
                     <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />}>
-                      Ajouter un objet
+                    Ajouter un objet
                     </Button>
                   </Link>
                 </div>
@@ -375,50 +376,44 @@ export const Dashboard = () => {
 
             {activeTab === 'reservations' && (
               <div>
-                <h2 className="text-heading text-xl font-semibold mb-6">Mes locations</h2>
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h2 className="text-heading text-xl font-semibold">Mes locations</h2>
+                    <p className="text-body text-sm mt-1">Gérez vos réservations et handovers</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="default" size="lg">
+                      {myReservations.length} réservation{myReservations.length > 1 ? 's' : ''}
+                    </Badge>
+                  </div>
+                </div>
+
                 {myReservations.length === 0 ? (
-                  <Card className="text-center py-12">
+                  <Card className="text-center py-16">
                     <CardContent>
-                      <Calendar className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-neutral-600 mb-2">Aucune réservation</h3>
-                      <p className="text-neutral-500 mb-6">Vous n'avez pas encore fait de réservations</p>
+                      <div className="w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Calendar className="h-10 w-10 text-brand-600" />
+                  </div>
+                      <h3 className="text-heading text-xl font-semibold mb-3">Aucune réservation</h3>
+                      <p className="text-body mb-8 max-w-md mx-auto">
+                        Vous n'avez pas encore fait de réservations. Découvrez notre sélection d'objets disponibles à la location.
+                      </p>
                       <Link to="/objects">
-                        <Button variant="primary" leftIcon={<Package className="h-4 w-4" />}>
+                        <Button variant="primary" size="lg" leftIcon={<Package className="h-5 w-5" />}>
                           Découvrir les objets
                         </Button>
                       </Link>
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {myReservations.map((reservation) => (
-                      <Card key={reservation.id} className="card-hover">
-                        <CardContent className="p-6">
-                          <div className="flex justify-between items-start mb-4">
-                            <div className="flex-1">
-                              <h3 className="text-heading text-lg font-semibold mb-2">
-                                {reservation.object?.title}
-                              </h3>
-                              <div className="text-body text-sm space-y-2">
-                                <p>Du {new Date(reservation.start_date).toLocaleDateString('fr-FR')} au {new Date(reservation.end_date).toLocaleDateString('fr-FR')}</p>
-                                <div className="flex items-center gap-1">
-                                  <Euro className="h-4 w-4" />
-                                  <span className="font-medium">{reservation.total_price}€</span>
-                                </div>
-                              </div>
-                            </div>
-                            {getStatusBadge(reservation.status)}
-                          </div>
-                          
-                          {/* Handovers pour cette réservation */}
-                          <div className="border-t border-neutral-200 pt-4">
-                            <ReservationHandovers 
-                              reservationId={reservation.id} 
-                              isOwner={false}
-                            />
-                          </div>
-                        </CardContent>
-                      </Card>
+                      <ReservationCard
+                        key={reservation.id}
+                        reservation={reservation}
+                        isOwner={false}
+                        getStatusBadge={getStatusBadge}
+                      />
                     ))}
                   </div>
                 )}
@@ -427,114 +422,45 @@ export const Dashboard = () => {
 
             {activeTab === 'received' && (
               <div>
-                <h2 className="text-heading text-xl font-semibold mb-6">Réservations reçues</h2>
+                <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h2 className="text-heading text-xl font-semibold">Réservations reçues</h2>
+                    <p className="text-body text-sm mt-1">Gérez les demandes de location de vos objets</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="default" size="lg">
+                      {receivedReservations.length} réservation{receivedReservations.length > 1 ? 's' : ''}
+                    </Badge>
+                  </div>
+                </div>
+
                 {receivedReservations.length === 0 ? (
-                  <Card className="text-center py-12">
+                  <Card className="text-center py-16">
                     <CardContent>
-                      <Calendar className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-neutral-600 mb-2">Aucune réservation</h3>
-                      <p className="text-neutral-500 mb-6">Vous n'avez pas encore reçu de réservations</p>
+                      <div className="w-20 h-20 bg-brand-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <Calendar className="h-10 w-10 text-brand-600" />
+                      </div>
+                      <h3 className="text-heading text-xl font-semibold mb-3">Aucune réservation reçue</h3>
+                      <p className="text-body mb-8 max-w-md mx-auto">
+                        Vous n'avez pas encore reçu de réservations. Publiez vos premiers objets pour commencer à recevoir des demandes.
+                      </p>
                       <Link to="/objects/new">
-                        <Button variant="primary" leftIcon={<Plus className="h-4 w-4" />}>
+                        <Button variant="primary" size="lg" leftIcon={<Plus className="h-5 w-5" />}>
                           Publier un objet
                         </Button>
                       </Link>
                     </CardContent>
                   </Card>
                 ) : (
-                  <div className="space-y-4">
+                  <div className="space-y-6">
                     {receivedReservations.map((reservation) => (
-                      <Card key={reservation.id} className="card-hover">
-                        <CardContent className="p-6">
-                          <div className="flex justify-between items-start mb-4">
-                            <div className="flex-1">
-                              <h3 className="text-heading text-lg font-semibold mb-2">
-                                {reservation.object?.title}
-                              </h3>
-                              <div className="text-body text-sm space-y-2">
-                                <div className="flex items-center gap-2">
-                                  <User className="h-4 w-4 text-neutral-500" />
-                                  <Link 
-                                    to={`/profile/${reservation.renter?.id}`}
-                                    className="text-brand-600 hover:text-brand-700 hover:underline font-medium"
-                                  >
-                                    {reservation.renter?.full_name}
-                                  </Link>
-                                </div>
-                                <p>Du {new Date(reservation.start_date).toLocaleDateString('fr-FR')} au {new Date(reservation.end_date).toLocaleDateString('fr-FR')}</p>
-                                <div className="flex items-center gap-1">
-                                  <Euro className="h-4 w-4" />
-                                  <span className="font-medium">{reservation.total_price}€</span>
-                                </div>
-                                
-                                {/* Informations de scan QR */}
-                                {reservation.handovers && reservation.handovers.length > 0 && (
-                                  <div className="mt-3 space-y-1">
-                                    {reservation.handovers?.map((handover: Handover) => (
-                                      <div key={handover.id} className="flex items-center gap-2 text-xs">
-                                        <Clock className="h-3 w-3 text-neutral-500" />
-                                        <span className="text-neutral-600">
-                                          {handover.type === 'pickup' ? 'Retrait' : 'Restitution'}:
-                                        </span>
-                                        {handover.actual_date ? (
-                                          <span className="text-success-600 font-medium">
-                                            {new Date(handover.actual_date).toLocaleString('fr-FR')}
-                                          </span>
-                                        ) : (
-                                          <span className="text-warning-600">
-                                            En attente
-                                          </span>
-                                        )}
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex flex-col items-end gap-3">
-                              {getStatusBadge(reservation.status)}
-                              
-                              {/* Boutons d'action pour les réservations en attente */}
-                              {reservation.status === 'pending' && (
-                                <div className="flex gap-2">
-                                  <Button
-                                    onClick={() => handleAcceptReservation(reservation.id)}
-                                    variant="primary"
-                                    size="sm"
-                                    leftIcon={<CheckCircle className="h-4 w-4" />}
-                                  >
-                                    Accepter
-                                  </Button>
-                                  <Button
-                                    onClick={() => handleRejectReservation(reservation.id)}
-                                    variant="danger"
-                                    size="sm"
-                                    leftIcon={<XCircle className="h-4 w-4" />}
-                                  >
-                                    Refuser
-                                  </Button>
-                                </div>
-                              )}
-                              
-                              {/* Message pour les réservations confirmées */}
-                              {reservation.status === 'confirmed' && (
-                                <div className="flex items-center gap-1 text-success-600 text-sm">
-                                  <CheckCircle className="h-4 w-4" />
-                                  <span>Confirmée</span>
-                                </div>
-                              )}
-                              
-                              {/* Message pour les réservations refusées */}
-                              {reservation.status === 'rejected' && (
-                                <div className="flex items-center gap-1 text-accent-600 text-sm">
-                                  <XCircle className="h-4 w-4" />
-                                  <span>Refusée</span>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                      <ReceivedReservationCard
+                        key={reservation.id}
+                        reservation={reservation}
+                        getStatusBadge={getStatusBadge}
+                        onAcceptReservation={handleAcceptReservation}
+                        onRejectReservation={handleRejectReservation}
+                      />
                     ))}
                   </div>
                 )}
@@ -552,43 +478,43 @@ export const Dashboard = () => {
                     <h3 className="text-heading text-lg font-semibold">Handovers par Réservation</h3>
                   </CardHeader>
                   <CardContent>
-                    {receivedReservations.filter(r => r.status === 'confirmed').length === 0 ? (
-                      <div className="text-center py-8">
+                  {receivedReservations.filter(r => r.status === 'confirmed').length === 0 ? (
+                    <div className="text-center py-8">
                         <QrCode className="h-12 w-12 text-neutral-300 mx-auto mb-3" />
                         <h3 className="text-lg font-medium text-neutral-600 mb-2">Aucune réservation confirmée</h3>
                         <p className="text-neutral-500 text-sm">
-                          Les handovers ne peuvent être créés que pour les réservations confirmées
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {receivedReservations
-                          .filter(reservation => reservation.status === 'confirmed')
-                          .map((reservation) => (
+                        Les handovers ne peuvent être créés que pour les réservations confirmées
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {receivedReservations
+                        .filter(reservation => reservation.status === 'confirmed')
+                        .map((reservation) => (
                             <Card key={reservation.id} className="border-neutral-200">
                               <CardContent className="p-4">
                                 <div className="flex items-center justify-between mb-4">
-                                  <div>
+                              <div>
                                     <h4 className="text-heading text-lg font-semibold">{reservation.object?.title}</h4>
                                     <p className="text-body text-sm">
-                                      Locataire: {reservation.renter?.full_name}
-                                    </p>
+                                  Locataire: {reservation.renter?.full_name}
+                                </p>
                                     <p className="text-body text-sm">
-                                      Du {new Date(reservation.start_date).toLocaleDateString('fr-FR')} au {new Date(reservation.end_date).toLocaleDateString('fr-FR')}
-                                    </p>
-                                  </div>
+                                  Du {new Date(reservation.start_date).toLocaleDateString('fr-FR')} au {new Date(reservation.end_date).toLocaleDateString('fr-FR')}
+                                </p>
+                              </div>
                                   <div className="flex items-center gap-2">
                                     <Euro className="h-4 w-4 text-neutral-600" />
-                                    <span className="font-medium">{reservation.total_price}€</span>
-                                  </div>
-                                </div>
-                                
-                                <HandoversManager reservationId={reservation.id} isOwner={true} />
+                                <span className="font-medium">{reservation.total_price}€</span>
+                              </div>
+                            </div>
+                            
+                            <HandoversManager reservationId={reservation.id} isOwner={true} />
                               </CardContent>
                             </Card>
-                          ))}
-                      </div>
-                    )}
+                        ))}
+                    </div>
+                  )}
                   </CardContent>
                 </Card>
               </div>
