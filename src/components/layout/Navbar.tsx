@@ -4,6 +4,7 @@ import { useRole } from '../../hooks/useRole';
 import { useNotifications } from '../../hooks/useNotifications';
 import { authService } from '../../services/auth.service';
 import { RoleBadge } from '../common/RoleBadge';
+import { Button } from '../common/Button';
 import { Menu, Home, Package, MessageSquare, User, LogOut, Plus, Settings, X, Search, Bell, ChevronDown, HelpCircle, Grid3X3, QrCode } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
@@ -21,7 +22,7 @@ export const Navbar = () => {
   // Gestion du scroll pour l'effet de transparence
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+      setIsScrolled(window.scrollY > 20);
     };
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -47,16 +48,16 @@ export const Navbar = () => {
   const UserAvatar = ({ name, email }: { name: string; email: string }) => {
     const initials = name.split(' ').map(n => n[0]).join('').toUpperCase();
     return (
-      <div className="flex items-center space-x-3">
+      <div className="flex items-center gap-3">
         <div className="relative">
-          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-lg">
+          <div className="w-10 h-10 bg-brand-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
             {initials}
           </div>
-          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+          <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-success-500 rounded-full border-2 border-white"></div>
         </div>
         <div className="text-left">
-          <div className="font-semibold text-gray-900 text-sm">{name}</div>
-          <div className="text-xs text-gray-500">{email}</div>
+          <div className="font-semibold text-neutral-900 text-sm">{name}</div>
+          <div className="text-xs text-neutral-500">{email}</div>
           {role && (
             <div className="mt-1">
               <RoleBadge role={role} size="sm" />
@@ -78,21 +79,18 @@ export const Navbar = () => {
     return (
       <Link
         to={to}
-        className={`relative flex items-center space-x-2 px-4 py-2.5 rounded-xl transition-all duration-300 group ${
+        className={`relative flex items-center gap-2 px-4 py-2.5 rounded-xl transition-all duration-200 group ${
           isActive 
-            ? 'text-white bg-gradient-to-r from-blue-600 to-purple-600 shadow-lg shadow-blue-500/30' 
-            : 'text-gray-700 hover:text-blue-600 hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50'
+            ? 'text-brand-600 bg-brand-50' 
+            : 'text-neutral-600 hover:text-brand-600 hover:bg-neutral-50'
         } ${className}`}
       >
-        {Icon && <Icon className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />}
-        <span className="font-medium">{children}</span>
+        {Icon && <Icon className="h-4 w-4" />}
+        <span className="font-medium text-sm">{children}</span>
         {badge && badge > 0 && (
-          <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse">
+          <div className="bg-accent-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold">
             {badge > 9 ? '9+' : badge}
           </div>
-        )}
-        {isActive && (
-          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-white rounded-full animate-pulse" />
         )}
       </Link>
     );
@@ -102,34 +100,31 @@ export const Navbar = () => {
     <>
       <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled 
-          ? 'bg-white/95 backdrop-blur-md shadow-xl border-b border-gray-200/50' 
-          : 'bg-white shadow-lg'
+          ? 'bg-white/95 backdrop-blur-md shadow-soft border-b border-neutral-200' 
+          : 'bg-white'
       }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20">
-            {/* Logo redesigné avec effet de halo */}
+          <div className="flex justify-between items-center h-16">
+            {/* Logo moderne et minimaliste */}
             <Link 
               to="/" 
-              className="flex items-center space-x-4 group transition-all duration-300 hover:scale-105"
+              className="flex items-center gap-3 group transition-all duration-200 hover:opacity-80"
             >
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl opacity-0 group-hover:opacity-30 transition-all duration-500 blur-xl scale-110"></div>
-                <div className="relative bg-gradient-to-br from-blue-600 to-purple-700 p-3 rounded-2xl shadow-lg group-hover:shadow-blue-500/30 transition-all duration-300">
-                  <Package className="h-8 w-8 text-white transition-transform duration-300 group-hover:rotate-12" />
-                </div>
+              <div className="w-10 h-10 bg-brand-500 rounded-xl flex items-center justify-center">
+                <Package className="h-6 w-6 text-white" />
               </div>
               <div className="flex flex-col">
-                <span className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent group-hover:from-purple-600 group-hover:to-blue-600 transition-all duration-300">
+                <span className="text-xl font-bold text-neutral-900">
                   NeuroLoc
                 </span>
-                <span className="text-xs text-gray-500 font-medium tracking-wider uppercase">
+                <span className="text-xs text-neutral-500 font-medium">
                   Location intelligente
                 </span>
               </div>
             </Link>
 
             {/* Navigation desktop */}
-            <div className="hidden lg:flex items-center space-x-3">
+            <div className="hidden lg:flex items-center gap-2">
               {!user && (
                 <>
                   <NavLink to="/" icon={Home}>Accueil</NavLink>
@@ -141,51 +136,44 @@ export const Navbar = () => {
                 <>
                   <NavLink to="/dashboard" icon={User}>Tableau de bord</NavLink>
                   <NavLink to="/objects" icon={Grid3X3}>Objets</NavLink>
-
                   <NavLink to="/messages" icon={MessageSquare} badge={unreadCount}>Messages</NavLink>
                   
-                  {/* Bouton scanner QR code */}
-                  <Link
-                    to="/qr-scanner"
-                    className="flex items-center justify-center w-10 h-10 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 group"
-                    title="Scanner QR Code"
-                  >
-                    <QrCode className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
-                  </Link>
+                  {/* Boutons d'action */}
+                  <div className="flex items-center gap-1 ml-2">
+                    <button className="p-2 text-neutral-600 hover:text-brand-600 hover:bg-neutral-50 rounded-xl transition-all duration-200">
+                      <Search className="h-4 w-4" />
+                    </button>
+                    <button className="p-2 text-neutral-600 hover:text-brand-600 hover:bg-neutral-50 rounded-xl transition-all duration-200">
+                      <QrCode className="h-4 w-4" />
+                    </button>
+                    <button className="relative p-2 text-neutral-600 hover:text-brand-600 hover:bg-neutral-50 rounded-xl transition-all duration-200">
+                      <Bell className="h-4 w-4" />
+                      {unreadCount > 0 && (
+                        <div className="absolute -top-1 -right-1 bg-accent-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </div>
+                      )}
+                    </button>
+                  </div>
                   
-                  {/* Bouton de recherche */}
-                  <button className="flex items-center justify-center w-10 h-10 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 group">
-                    <Search className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
-                  </button>
-                  
-                  {/* Bouton de notifications */}
-                  <button className="relative flex items-center justify-center w-10 h-10 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 group">
-                    <Bell className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
-                    {unreadCount > 0 && (
-                      <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse">
-                        {unreadCount > 9 ? '9+' : unreadCount}
-                      </div>
-                    )}
-                  </button>
-                  
-                  {/* Bouton Publier avec effets avancés */}
-                  <Link
-                    to="/objects/new"
-                    className="relative flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/30 transform hover:scale-105 group overflow-hidden"
-                  >
-                    <Plus className="h-5 w-5 transition-transform duration-300 group-hover:rotate-90" />
-                    <span className="font-semibold">Publier</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                    <div className="absolute inset-0 bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  {/* Bouton Publier */}
+                  <Link to="/objects/new">
+                    <Button 
+                      variant="primary" 
+                      size="sm"
+                      leftIcon={<Plus className="h-4 w-4" />}
+                    >
+                      Publier
+                    </Button>
                   </Link>
                   
                   {/* Menu utilisateur avec dropdown */}
                   <div className="relative">
                     <button
                       onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                      className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 group"
+                      className="flex items-center gap-2 px-3 py-2 text-neutral-700 hover:text-brand-600 hover:bg-neutral-50 rounded-xl transition-all duration-200"
                     >
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                      <div className="w-8 h-8 bg-brand-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                         {user.user_metadata?.full_name?.split(' ').map((n: string) => n[0]).join('').toUpperCase() || 'U'}
                       </div>
                       <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isUserMenuOpen ? 'rotate-180' : ''}`} />
@@ -193,8 +181,8 @@ export const Navbar = () => {
                     
                     {/* Dropdown menu */}
                     {isUserMenuOpen && (
-                      <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-xl border border-gray-200/50 py-4 z-50">
-                        <div className="px-4 pb-3 border-b border-gray-100">
+                      <div className="absolute right-0 top-full mt-2 w-64 bg-white rounded-2xl shadow-large border border-neutral-200 py-4 z-50">
+                        <div className="px-4 pb-3 border-b border-neutral-100">
                           <UserAvatar 
                             name={user.user_metadata?.full_name || 'Utilisateur'} 
                             email={user.email || ''} 
@@ -203,21 +191,21 @@ export const Navbar = () => {
                         <div className="py-2">
                           <Link
                             to="/profile"
-                            className="flex items-center space-x-3 px-4 py-2 text-gray-700 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200"
+                            className="flex items-center gap-3 px-4 py-2 text-neutral-700 hover:text-brand-600 hover:bg-neutral-50 transition-all duration-200"
                             onClick={() => setIsUserMenuOpen(false)}
                           >
-                            <Settings className="h-5 w-5" />
-                            <span className="font-medium">Paramètres</span>
+                            <Settings className="h-4 w-4" />
+                            <span className="font-medium text-sm">Paramètres</span>
                           </Link>
                           <button
                             onClick={() => {
                               handleLogout();
                               setIsUserMenuOpen(false);
                             }}
-                            className="flex items-center space-x-3 w-full px-4 py-2 text-gray-700 hover:text-red-600 hover:bg-red-50 transition-all duration-200"
+                            className="flex items-center gap-3 w-full px-4 py-2 text-neutral-700 hover:text-accent-600 hover:bg-accent-50 transition-all duration-200"
                           >
-                            <LogOut className="h-5 w-5" />
-                            <span className="font-medium">Déconnexion</span>
+                            <LogOut className="h-4 w-4" />
+                            <span className="font-medium text-sm">Déconnexion</span>
                           </button>
                         </div>
                       </div>
@@ -226,59 +214,45 @@ export const Navbar = () => {
                 </>
               ) : (
                 <>
-                  <Link
-                    to="/login"
-                    className="px-6 py-2.5 text-gray-700 hover:text-blue-600 font-medium transition-all duration-300 hover:bg-blue-50 rounded-xl"
-                  >
-                    Connexion
+                  <Link to="/login">
+                    <Button variant="ghost" size="sm">
+                      Connexion
+                    </Button>
                   </Link>
-                  <Link
-                    to="/signup"
-                    className="relative bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-2.5 rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl hover:shadow-blue-500/30 transform hover:scale-105 group overflow-hidden"
-                  >
-                    <span className="font-semibold">Inscription</span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                  <Link to="/signup">
+                    <Button variant="primary" size="sm">
+                      Inscription
+                    </Button>
                   </Link>
                 </>
               )}
             </div>
 
-            {/* Bouton menu mobile avec animation améliorée */}
+            {/* Bouton menu mobile */}
             <button
-              className="lg:hidden relative p-3 rounded-xl hover:bg-blue-50 transition-all duration-300 group"
+              className="lg:hidden p-2 text-neutral-600 hover:text-brand-600 hover:bg-neutral-50 rounded-xl transition-all duration-200"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
             >
-              <div className="relative w-6 h-6">
-                <Menu 
-                  className={`absolute inset-0 h-6 w-6 text-gray-700 group-hover:text-blue-600 transition-all duration-300 ${
-                    isMenuOpen ? 'opacity-0 rotate-180 scale-75' : 'opacity-100 rotate-0 scale-100'
-                  }`} 
-                />
-                <X 
-                  className={`absolute inset-0 h-6 w-6 text-gray-700 group-hover:text-blue-600 transition-all duration-300 ${
-                    isMenuOpen ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-180 scale-75'
-                  }`} 
-                />
-              </div>
+              {isMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
       </nav>
 
       {/* Espace pour la navbar fixe */}
-      <div className="h-20" />
+      <div className="h-16" />
 
-      {/* Menu mobile avec animations améliorées */}
-      <div className={`lg:hidden fixed inset-x-0 top-20 z-40 transition-all duration-500 ease-in-out ${
+      {/* Menu mobile */}
+      <div className={`lg:hidden fixed inset-x-0 top-16 z-40 transition-all duration-300 ${
         isMenuOpen 
           ? 'opacity-100 translate-y-0 pointer-events-auto' 
-          : 'opacity-0 -translate-y-8 pointer-events-none'
+          : 'opacity-0 -translate-y-4 pointer-events-none'
       }`}>
-        <div className="bg-white/95 backdrop-blur-xl border-b border-gray-200/50 shadow-2xl rounded-b-3xl">
-          <div className="px-6 py-8 space-y-4">
-            {/* Carte utilisateur en haut du menu mobile */}
+        <div className="bg-white border-b border-neutral-200 shadow-medium">
+          <div className="px-4 py-6 space-y-4">
+            {/* Carte utilisateur */}
             {user && (
-              <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl p-4 mb-6 border border-blue-100">
+              <div className="bg-neutral-50 rounded-xl p-4 mb-4">
                 <UserAvatar 
                   name={user.user_metadata?.full_name || 'Utilisateur'} 
                   email={user.email || ''} 
@@ -288,11 +262,10 @@ export const Navbar = () => {
             
             {!user && (
               <>
-                <NavLink to="/" icon={Home} className="w-full justify-start text-lg">
+                <NavLink to="/" icon={Home} className="w-full justify-start">
                   Accueil
                 </NavLink>
-                
-                <NavLink to="/how-it-works" icon={HelpCircle} className="w-full justify-start text-lg">
+                <NavLink to="/how-it-works" icon={HelpCircle} className="w-full justify-start">
                   Comment ça marche
                 </NavLink>
               </>
@@ -300,50 +273,46 @@ export const Navbar = () => {
             
             {user ? (
               <>
-                <NavLink to="/dashboard" icon={User} className="w-full justify-start text-lg">
+                <NavLink to="/dashboard" icon={User} className="w-full justify-start">
                   Tableau de bord
                 </NavLink>
-                <NavLink to="/messages" icon={MessageSquare} badge={unreadCount} className="w-full justify-start text-lg">
+                <NavLink to="/objects" icon={Grid3X3} className="w-full justify-start">
+                  Objets
+                </NavLink>
+                <NavLink to="/messages" icon={MessageSquare} badge={unreadCount} className="w-full justify-start">
                   Messages
                 </NavLink>
                 
                 {/* Boutons d'action mobile */}
-                <div className="flex space-x-3 pt-2">
-                  <Link
-                    to="/qr-scanner"
-                    className="flex items-center justify-center w-12 h-12 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 group"
-                    title="Scanner QR Code"
-                  >
-                    <QrCode className="h-6 w-6 transition-transform duration-200 group-hover:scale-110" />
-                  </Link>
-                  <button className="flex items-center justify-center w-12 h-12 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 group">
-                    <Search className="h-6 w-6 transition-transform duration-200 group-hover:scale-110" />
+                <div className="flex gap-2 pt-2">
+                  <button className="p-3 text-neutral-600 hover:text-brand-600 hover:bg-neutral-50 rounded-xl transition-all duration-200">
+                    <Search className="h-5 w-5" />
                   </button>
-                  <button className="relative flex items-center justify-center w-12 h-12 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all duration-300 group">
-                    <Bell className="h-6 w-6 transition-transform duration-200 group-hover:scale-110" />
+                  <button className="p-3 text-neutral-600 hover:text-brand-600 hover:bg-neutral-50 rounded-xl transition-all duration-200">
+                    <QrCode className="h-5 w-5" />
+                  </button>
+                  <button className="relative p-3 text-neutral-600 hover:text-brand-600 hover:bg-neutral-50 rounded-xl transition-all duration-200">
+                    <Bell className="h-5 w-5" />
                     {unreadCount > 0 && (
-                      <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold animate-pulse">
+                      <div className="absolute -top-1 -right-1 bg-accent-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center font-bold">
                         {unreadCount > 9 ? '9+' : unreadCount}
                       </div>
                     )}
                   </button>
                 </div>
                 
-                <Link
-                  to="/objects/new"
-                  className="flex items-center space-x-3 w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-4 rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl group overflow-hidden"
-                >
-                  <Plus className="h-6 w-6 transition-transform duration-300 group-hover:rotate-90" />
-                  <span className="font-semibold text-lg">Publier un objet</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                <Link to="/objects/new" className="w-full">
+                  <Button variant="primary" size="lg" leftIcon={<Plus className="h-5 w-5" />} className="w-full">
+                    Publier un objet
+                  </Button>
                 </Link>
                 
                 <Link
                   to="/profile"
-                  className="flex items-center space-x-3 w-full text-left text-gray-700 hover:text-blue-600 hover:bg-blue-50 px-4 py-3 rounded-xl transition-all duration-300 group"
+                  className="flex items-center gap-3 w-full text-left text-neutral-700 hover:text-brand-600 hover:bg-neutral-50 px-4 py-3 rounded-xl transition-all duration-200"
                 >
-                  <Settings className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
-                  <span className="font-medium">Paramètres</span>
+                  <Settings className="h-4 w-4" />
+                  <span className="font-medium text-sm">Paramètres</span>
                 </Link>
                 
                 <button
@@ -351,26 +320,23 @@ export const Navbar = () => {
                     handleLogout();
                     setIsMenuOpen(false);
                   }}
-                  className="flex items-center space-x-3 w-full text-left text-gray-700 hover:text-red-600 hover:bg-red-50 px-4 py-3 rounded-xl transition-all duration-300 group"
+                  className="flex items-center gap-3 w-full text-left text-neutral-700 hover:text-accent-600 hover:bg-accent-50 px-4 py-3 rounded-xl transition-all duration-200"
                 >
-                  <LogOut className="h-5 w-5 transition-transform duration-200 group-hover:scale-110" />
-                  <span className="font-medium">Déconnexion</span>
+                  <LogOut className="h-4 w-4" />
+                  <span className="font-medium text-sm">Déconnexion</span>
                 </button>
               </>
             ) : (
               <>
-                <Link
-                  to="/login"
-                  className="block w-full text-center px-6 py-4 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-2xl font-medium transition-all duration-300 text-lg"
-                >
-                  Connexion
+                <Link to="/login" className="w-full">
+                  <Button variant="ghost" size="lg" className="w-full">
+                    Connexion
+                  </Button>
                 </Link>
-                <Link
-                  to="/signup"
-                  className="block w-full text-center bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-4 rounded-2xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl font-semibold text-lg overflow-hidden group"
-                >
-                  <span className="relative z-10">Inscription</span>
-                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                <Link to="/signup" className="w-full">
+                  <Button variant="primary" size="lg" className="w-full">
+                    Inscription
+                  </Button>
                 </Link>
               </>
             )}
@@ -381,7 +347,7 @@ export const Navbar = () => {
       {/* Overlay pour fermer le menu mobile */}
       {isMenuOpen && (
         <div 
-          className="lg:hidden fixed inset-0 bg-black/30 backdrop-blur-md z-30 transition-opacity duration-500"
+          className="lg:hidden fixed inset-0 bg-black/20 backdrop-blur-sm z-30 transition-opacity duration-300"
           onClick={() => setIsMenuOpen(false)}
         />
       )}

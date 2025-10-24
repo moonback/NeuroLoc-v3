@@ -1,13 +1,18 @@
-export const Loader = ({ size = 'md' }: { size?: 'sm' | 'md' | 'lg' }) => {
-  const sizes = {
-    sm: 'h-6 w-6',
-    md: 'h-12 w-12',
-    lg: 'h-16 w-16'
-  };
+import { Loader2 } from 'lucide-react';
 
+interface LoaderProps {
+  size?: 'sm' | 'md' | 'lg';
+  className?: string;
+}
+
+export const Loader = ({ size = 'md', className = '' }: LoaderProps) => {
+  const sizes = {
+    sm: 'h-4 w-4',
+    md: 'h-6 w-6',
+    lg: 'h-8 w-8'
+  };
+  
   return (
-    <div className="flex justify-center items-center">
-      <div className={`${sizes[size]} border-4 border-gray-200 border-t-blue-600 rounded-full animate-spin`} />
-    </div>
+    <Loader2 className={`${sizes[size]} animate-spin text-brand-500 ${className}`} />
   );
 };

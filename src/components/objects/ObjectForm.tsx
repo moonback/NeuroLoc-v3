@@ -1,6 +1,7 @@
 import { useState, FormEvent, useEffect } from 'react';
 import { Input } from '../common/Input';
 import { Button } from '../common/Button';
+import { Card, CardContent, CardHeader } from '../common/Card';
 import { CreateObjectInput, Category } from '../../types';
 import { useAuth } from '../../hooks/useAuth';
 import { AddressAutocomplete } from '../common/AddressAutocomplete';
@@ -8,7 +9,7 @@ import { GeolocationButton, LocationDisplay } from '../common/GeolocationButton'
 import { ProfileLocationInfo } from '../common/ProfileLocationInfo';
 import { ImageUpload } from './ImageUpload';
 import { geolocationService } from '../../services/geolocation.service';
-import { MapPin, Camera } from 'lucide-react';
+import { MapPin, Camera, Package, Euro } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const CATEGORIES: Category[] = [
@@ -133,107 +134,125 @@ export const ObjectForm = ({ initialData, onSubmit, submitLabel = 'Publier' }: O
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <Input
-        label="Titre de l'objet"
-        type="text"
-        placeholder="Ex: Perceuse sans fil Bosch"
-        value={formData.title}
-        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-        error={errors.title}
-        required
-      />
+    <div className="space-y-6">
+      {/* Informations de base */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center">
+              <Package className="h-4 w-4 text-brand-600" />
+            </div>
+            <h3 className="text-heading text-lg font-semibold">Informations de base</h3>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <Input
+            label="Titre de l'objet"
+            type="text"
+            placeholder="Ex: Perceuse sans fil Bosch"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            error={errors.title}
+            required
+          />
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Description
-        </label>
-        <textarea
-          className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            errors.description ? 'border-red-500' : 'border-gray-300'
-          }`}
-          rows={5}
-          placeholder="Décrivez votre objet en détail..."
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          required
-        />
-        {errors.description && (
-          <p className="mt-1 text-sm text-red-600">{errors.description}</p>
-        )}
-      </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              Description
+            </label>
+            <textarea
+              className={`input resize-none ${errors.description ? 'border-accent-500 focus:ring-accent-500' : ''}`}
+              rows={5}
+              placeholder="Décrivez votre objet en détail..."
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              required
+            />
+            {errors.description && (
+              <p className="mt-2 text-sm text-accent-600">{errors.description}</p>
+            )}
+          </div>
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Catégorie
-        </label>
-        <select
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          value={formData.category}
-          onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-          required
-        >
-          {CATEGORIES.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
-      </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              Catégorie
+            </label>
+            <select
+              className="input"
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              required
+            >
+              {CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
 
-      <Input
-        label="Prix par jour (€)"
-        type="number"
-        step="0.01"
-        min="0"
-        placeholder="25.00"
-        value={formData.price_per_day}
-        onChange={(e) => setFormData({ ...formData, price_per_day: parseFloat(e.target.value) })}
-        error={errors.price_per_day}
-        required
-      />
+          <Input
+            label="Prix par jour (€)"
+            type="number"
+            step="0.01"
+            min="0"
+            placeholder="25.00"
+            value={formData.price_per_day}
+            onChange={(e) => setFormData({ ...formData, price_per_day: parseFloat(e.target.value) })}
+            error={errors.price_per_day}
+            leftIcon={Euro}
+            required
+          />
+        </CardContent>
+      </Card>
 
       {/* Section Images */}
-      <div className="border-t pt-6">
-        <h3 className="text-lg font-medium text-gray-900 flex items-center mb-4">
-          <Camera className="h-5 w-5 mr-2" />
-          Images de l'objet
-        </h3>
-        
-        <ImageUpload
-          onImagesUploaded={(urls) => setFormData(prev => ({ ...prev, images: urls }))}
-          existingImages={formData.images || []}
-          maxImages={10}
-          disabled={isLoading}
-        />
-        
-        <p className="mt-2 text-xs text-gray-500">
-          Ajoutez jusqu'à 10 images pour mieux présenter votre objet. La première image sera utilisée comme image principale.
-        </p>
-      </div>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center">
+              <Camera className="h-4 w-4 text-brand-600" />
+            </div>
+            <h3 className="text-heading text-lg font-semibold">Images de l'objet</h3>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <ImageUpload
+            onImagesUploaded={(urls) => setFormData(prev => ({ ...prev, images: urls }))}
+            existingImages={formData.images || []}
+            maxImages={10}
+            disabled={isLoading}
+          />
+          <p className="mt-3 text-sm text-neutral-500">
+            Ajoutez jusqu'à 10 images pour mieux présenter votre objet. La première image sera utilisée comme image principale.
+          </p>
+        </CardContent>
+      </Card>
 
       {/* Section Localisation */}
-      <div className="border-t pt-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium text-gray-900 flex items-center">
-            <MapPin className="h-5 w-5 mr-2" />
-            Localisation de l'objet
-          </h3>
-          <GeolocationButton
-            onLocationFound={handleLocationDetected}
-            disabled={isLoading || isGeocoding}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center">
+                <MapPin className="h-4 w-4 text-brand-600" />
+              </div>
+              <h3 className="text-heading text-lg font-semibold">Localisation de l'objet</h3>
+            </div>
+            <GeolocationButton
+              onLocationFound={handleLocationDetected}
+              disabled={isLoading || isGeocoding}
+            />
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Information sur l'adresse du profil */}
+          <ProfileLocationInfo 
+            profileAddress={profile ? [profile.address, profile.city, profile.postal_code, profile.country].filter(Boolean).join(', ') : undefined}
           />
-        </div>
 
-        {/* Information sur l'adresse du profil */}
-        <ProfileLocationInfo 
-          profileAddress={profile ? [profile.address, profile.city, profile.postal_code, profile.country].filter(Boolean).join(', ') : undefined}
-          className="mb-4"
-        />
-
-        <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
               Adresse de récupération *
             </label>
             <AddressAutocomplete
@@ -244,9 +263,9 @@ export const ObjectForm = ({ initialData, onSubmit, submitLabel = 'Publier' }: O
               disabled={isLoading || isGeocoding}
             />
             {errors.location && (
-              <p className="mt-1 text-sm text-red-600">{errors.location}</p>
+              <p className="mt-2 text-sm text-accent-600">{errors.location}</p>
             )}
-            <p className="mt-1 text-xs text-gray-500">
+            <p className="mt-2 text-sm text-neutral-500">
               Par défaut, l'adresse de votre profil est utilisée. Vous pouvez la modifier si nécessaire.
             </p>
           </div>
@@ -259,12 +278,14 @@ export const ObjectForm = ({ initialData, onSubmit, submitLabel = 'Publier' }: O
               longitude={formData.longitude}
             />
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
-      <Button type="submit" className="w-full" isLoading={isLoading || isGeocoding}>
-        {submitLabel}
-      </Button>
-    </form>
+      <form onSubmit={handleSubmit}>
+        <Button type="submit" className="w-full" isLoading={isLoading || isGeocoding}>
+          {submitLabel}
+        </Button>
+      </form>
+    </div>
   );
 };
