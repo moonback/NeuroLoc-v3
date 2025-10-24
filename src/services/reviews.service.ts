@@ -9,7 +9,7 @@ export const reviewsService = {
         *,
         reviewer:profiles!reviews_reviewer_id_fkey(*),
         reviewed:profiles!reviews_reviewed_id_fkey(*),
-        reservation:reservations(*, object:rental_objects(*))
+        reservation:reservations(*, object:objects(*))
       `)
       .eq('reviewed_id', userId)
       .order('created_at', { ascending: false });
@@ -25,7 +25,7 @@ export const reviewsService = {
         *,
         reviewer:profiles!reviews_reviewer_id_fkey(*),
         reviewed:profiles!reviews_reviewed_id_fkey(*),
-        reservation:reservations(*, object:rental_objects(*))
+        reservation:reservations(*, object:objects(*))
       `)
       .eq('reservation_id', reservationId)
       .order('created_at', { ascending: false });
@@ -35,11 +35,14 @@ export const reviewsService = {
   },
 
   async createReview(input: CreateReviewInput): Promise<Review> {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('User not authenticated');
+
     const { data, error } = await supabase
       .from('reviews')
       .insert({
         reservation_id: input.reservation_id,
-        reviewer_id: supabase.auth.getUser().then(({ data: { user } }) => user?.id),
+        reviewer_id: user.id,
         reviewed_id: input.reviewed_id,
         rating: input.rating,
         comment: input.comment || null
@@ -48,7 +51,7 @@ export const reviewsService = {
         *,
         reviewer:profiles!reviews_reviewer_id_fkey(*),
         reviewed:profiles!reviews_reviewed_id_fkey(*),
-        reservation:reservations(*, object:rental_objects(*))
+        reservation:reservations(*, object:objects(*))
       `)
       .single();
 
@@ -68,7 +71,7 @@ export const reviewsService = {
         *,
         reviewer:profiles!reviews_reviewer_id_fkey(*),
         reviewed:profiles!reviews_reviewed_id_fkey(*),
-        reservation:reservations(*, object:rental_objects(*))
+        reservation:reservations(*, object:objects(*))
       `)
       .single();
 

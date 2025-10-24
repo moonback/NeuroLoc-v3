@@ -1,62 +1,101 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import { useRole } from '../hooks/useRole';
 import { objectsService } from '../services/objects.service';
 import { reservationsService } from '../services/reservations.service';
-import { RentalObject, Reservation } from '../types';
+import { RentalObject, Reservation, Handover } from '../types';
 import { Loader } from '../components/common/Loader';
 import { ObjectCard } from '../components/objects/ObjectCard';
-import { Package, Calendar, Edit, Trash2, Euro, RefreshCw, AlertCircle } from 'lucide-react';
-import { DevelopmentModeBanner } from '../components/common/DevelopmentModeBanner';
+import { Package, Calendar, Edit, Trash2, Euro, RefreshCw, AlertCircle, CheckCircle, XCircle, QrCode, User, Clock, Star } from 'lucide-react';
+// import { DevelopmentModeBanner } from '../components/common/DevelopmentModeBanner';
 import { PaymentStatus } from '../components/payment/PaymentStatus';
+import { HandoversManager } from '../components/handovers/HandoversManager';
+import { ReservationHandovers } from '../components/handovers/ReservationHandovers';
+import { AddressManager } from '../components/profile/AddressManager';
+import { CompletedReservations } from '../components/profile/CompletedReservations';
+import { RoleStats } from '../components/profile/RoleStats';
+import { diagnosticUtils } from '../utils/diagnostic';
 import toast from 'react-hot-toast';
 
 export const Dashboard = () => {
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
+  const { isLoueur } = useRole();
   const [myObjects, setMyObjects] = useState<RentalObject[]>([]);
   const [myReservations, setMyReservations] = useState<Reservation[]>([]);
   const [receivedReservations, setReceivedReservations] = useState<Reservation[]>([]);
+  
+  // Debug: Log objects state changes
+  useEffect(() => {
+    console.log('📦 myObjects state changed:', myObjects);
+  }, [myObjects]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'objects' | 'reservations' | 'received'>('objects');
+  const [activeTab, setActiveTab] = useState<'objects' | 'reservations' | 'received' | 'handovers' | 'reviews'>(isLoueur ? 'objects' : 'reservations');
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  // Recharger les données quand le profil change
-  useEffect(() => {
-    if (profile?.id) {
-      loadData();
-    }
-  }, [profile?.id]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
+      console.log('🔄 loadData called', { profileId: profile?.id, isLoueur, role: profile?.role });
       setLoading(true);
       setError(null);
       
       if (profile?.id) {
-        const [objects, rentals, received] = await Promise.all([
-          objectsService.getObjectsByOwner(profile.id),
-          reservationsService.getReservationsAsRenter(),
-          reservationsService.getReservationsAsOwner()
-        ]);
+        // Vérifier le rôle directement depuis le profil pour éviter les re-renders
+        const userIsLoueur = profile.role === 'loueur';
         
-        setMyObjects(objects);
-        setMyReservations(rentals);
-        setReceivedReservations(received);
+        if (userIsLoueur) {
+          console.log('📦 Loading objects for loueur...');
+          const [objects, rentals, received] = await Promise.all([
+            objectsService.getObjectsByOwner(profile.id),
+            reservationsService.getReservationsAsRenter(),
+            reservationsService.getReservationsAsOwner()
+          ]);
+          
+          console.log('📦 Objects loaded:', objects);
+          // Vérifier que nous avons bien des objets avant de les définir
+          if (Array.isArray(objects)) {
+            setMyObjects(objects);
+          } else {
+            console.warn('⚠️ Objects is not an array:', objects);
+            setMyObjects([]);
+          }
+          setMyReservations(rentals);
+          setReceivedReservations(received);
+        } else {
+          console.log('👤 Loading data for renter...');
+          const [rentals, received] = await Promise.all([
+            reservationsService.getReservationsAsRenter(),
+            reservationsService.getReservationsAsOwner()
+          ]);
+          
+          setMyObjects([]);
+          setMyReservations(rentals);
+          setReceivedReservations(received);
+        }
       } else {
+        console.log('❌ No profile ID found');
         setError('Profil utilisateur non trouvé. Veuillez vous reconnecter.');
       }
     } catch (error) {
+      console.error('❌ Error in loadData:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       setError(`Erreur lors du chargement des données: ${errorMessage}`);
       toast.error(`Erreur lors du chargement des données: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
-  };
+  }, [profile?.id, profile?.role]);
+
+  // Charger les données quand le profil est disponible
+  useEffect(() => {
+    console.log('🔄 useEffect triggered', { authLoading, profileId: profile?.id, isLoueur });
+    if (!authLoading && profile?.id) {
+      console.log('✅ Conditions met, calling loadData');
+      loadData();
+    } else {
+      console.log('❌ Conditions not met', { authLoading, profileId: profile?.id });
+    }
+  }, [profile?.id, authLoading, loadData]);
 
   const handleDeleteObject = async (id: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cet objet ?')) return;
@@ -65,7 +104,7 @@ export const Dashboard = () => {
       await objectsService.deleteObject(id);
       toast.success('Objet supprimé avec succès');
       loadData();
-    } catch (error) {
+    } catch {
       toast.error('Erreur lors de la suppression');
     }
   };
@@ -76,7 +115,8 @@ export const Dashboard = () => {
       confirmed: 'bg-blue-100 text-blue-800',
       ongoing: 'bg-green-100 text-green-800',
       completed: 'bg-gray-100 text-gray-800',
-      cancelled: 'bg-red-100 text-red-800'
+      cancelled: 'bg-red-100 text-red-800',
+      rejected: 'bg-red-100 text-red-800'
     };
 
     const labels = {
@@ -84,7 +124,8 @@ export const Dashboard = () => {
       confirmed: 'Confirmée',
       ongoing: 'En cours',
       completed: 'Terminée',
-      cancelled: 'Annulée'
+      cancelled: 'Annulée',
+      rejected: 'Refusée'
     };
 
     return (
@@ -94,7 +135,60 @@ export const Dashboard = () => {
     );
   };
 
-  if (loading) {
+  const getObjectStatusBadge = (status: string) => {
+    const badges = {
+      available: 'bg-green-100 text-green-800',
+      rented: 'bg-blue-100 text-blue-800',
+      unavailable: 'bg-red-100 text-red-800'
+    };
+
+    const labels = {
+      available: 'Disponible',
+      rented: 'Loué',
+      unavailable: 'Indisponible'
+    };
+
+    return (
+      <span className={`px-3 py-1 rounded-full text-sm font-medium ${badges[status as keyof typeof badges]}`}>
+        {labels[status as keyof typeof labels]}
+      </span>
+    );
+  };
+
+  const handleAcceptReservation = async (reservationId: string) => {
+    try {
+      await reservationsService.acceptReservation(reservationId);
+      toast.success('✅ Réservation acceptée !');
+      loadData(); // Recharger les données
+    } catch (error: unknown) {
+      console.error('Error accepting reservation:', error);
+      toast.error('Erreur lors de l\'acceptation de la réservation');
+    }
+  };
+
+  const handleRejectReservation = async (reservationId: string) => {
+    try {
+      await reservationsService.rejectReservation(reservationId);
+      toast.success('❌ Réservation refusée');
+      loadData(); // Recharger les données
+    } catch (error: unknown) {
+      console.error('Error rejecting reservation:', error);
+      toast.error('Erreur lors du refus de la réservation');
+    }
+  };
+
+  const handleDiagnostic = async () => {
+    try {
+      await diagnosticUtils.generateDiagnosticReport();
+      toast.success('✅ Diagnostic terminé - Vérifiez la console pour les détails');
+      loadData(); // Recharger les données après correction
+    } catch (error: unknown) {
+      console.error('Error running diagnostic:', error);
+      toast.error('Erreur lors du diagnostic');
+    }
+  };
+
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader size="lg" />
@@ -113,14 +207,29 @@ export const Dashboard = () => {
               </h1>
               <p className="text-gray-600">Gérez vos objets et vos réservations</p>
             </div>
-            <button
-              onClick={loadData}
-              disabled={loading}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              <span>Actualiser</span>
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={loadData}
+                disabled={loading}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                <span className="text-white">Actualiser</span>
+              </button>
+              <button
+                onClick={handleDiagnostic}
+                disabled={loading}
+                className="flex items-center space-x-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <AlertCircle className="h-4 w-4" />
+                <span className="text-white">Diagnostic</span>
+              </button>
+            </div>
+          </div>
+          
+          {/* Statistiques de rôle */}
+          <div className="mt-6">
+            <RoleStats />
           </div>
           
           {error && (
@@ -135,7 +244,7 @@ export const Dashboard = () => {
         </div>
 
         {/* Banner de mode développement */}
-        <DevelopmentModeBanner />
+        {/* <DevelopmentModeBanner /> */}
 
         {/* Statut du paiement simulé */}
         <PaymentStatus />
@@ -143,19 +252,21 @@ export const Dashboard = () => {
         <div className="bg-white rounded-lg shadow-md mb-8">
           <div className="border-b">
             <nav className="flex space-x-8 px-6">
-              <button
-                onClick={() => setActiveTab('objects')}
-                className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
-                  activeTab === 'objects'
-                    ? 'border-blue-600 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                <div className="flex items-center space-x-2">
-                  <Package className="h-5 w-5" />
-                  <span>Mes objets ({myObjects.length})</span>
-                </div>
-              </button>
+              {isLoueur && (
+                <button
+                  onClick={() => setActiveTab('objects')}
+                  className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
+                    activeTab === 'objects'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <Package className="h-5 w-5" />
+                    <span>Mes objets ({myObjects.length})</span>
+                  </div>
+                </button>
+              )}
               <button
                 onClick={() => setActiveTab('reservations')}
                 className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
@@ -169,17 +280,49 @@ export const Dashboard = () => {
                   <span>Mes locations ({myReservations.length})</span>
                 </div>
               </button>
+              {isLoueur && (
+                <button
+                  onClick={() => setActiveTab('received')}
+                  className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
+                    activeTab === 'received'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <Calendar className="h-5 w-5" />
+                    <span>Réservations reçues ({receivedReservations.length})</span>
+                  </div>
+                </button>
+              )}
+              
+              {isLoueur && (
+                <button
+                  onClick={() => setActiveTab('handovers')}
+                  className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
+                    activeTab === 'handovers'
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <QrCode className="h-5 w-5" />
+                    <span>Handovers</span>
+                  </div>
+                </button>
+              )}
+              
               <button
-                onClick={() => setActiveTab('received')}
+                onClick={() => setActiveTab('reviews')}
                 className={`py-4 px-2 border-b-2 font-medium text-sm transition ${
-                  activeTab === 'received'
+                  activeTab === 'reviews'
                     ? 'border-blue-600 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700'
                 }`}
               >
                 <div className="flex items-center space-x-2">
-                  <Calendar className="h-5 w-5" />
-                  <span>Réservations reçues ({receivedReservations.length})</span>
+                  <Star className="h-5 w-5" />
+                  <span>Avis</span>
                 </div>
               </button>
             </nav>
@@ -208,6 +351,11 @@ export const Dashboard = () => {
                     {myObjects.map((object) => (
                       <div key={object.id} className="relative">
                         <ObjectCard object={object} />
+                        {/* Badge de statut de l'objet */}
+                        <div className="absolute top-2 right-2">
+                          {getObjectStatusBadge(object.status)}
+                        </div>
+                        {/* Boutons d'action */}
                         <div className="absolute top-2 left-2 flex space-x-2">
                           <Link
                             to={`/objects/${object.id}/edit`}
@@ -256,6 +404,14 @@ export const Dashboard = () => {
                           </div>
                           {getStatusBadge(reservation.status)}
                         </div>
+                        
+                        {/* Handovers pour cette réservation */}
+                        <div className="mt-4">
+                          <ReservationHandovers 
+                            reservationId={reservation.id} 
+                            isOwner={false}
+                          />
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -281,20 +437,153 @@ export const Dashboard = () => {
                               {reservation.object?.title}
                             </h3>
                             <div className="text-sm text-gray-600 space-y-1">
-                              <p>Locataire: {reservation.renter?.full_name}</p>
+                              <div className="flex items-center space-x-2">
+                                <User className="h-4 w-4 text-gray-500" />
+                                <Link 
+                                  to={`/profile/${reservation.renter?.id}`}
+                                  className="text-blue-600 hover:text-blue-800 hover:underline font-medium"
+                                >
+                                  {reservation.renter?.full_name}
+                                </Link>
+                              </div>
                               <p>Du {new Date(reservation.start_date).toLocaleDateString('fr-FR')} au {new Date(reservation.end_date).toLocaleDateString('fr-FR')}</p>
                               <div className="flex items-center">
                                 <Euro className="h-4 w-4 mr-1" />
                                 <span className="font-medium">{reservation.total_price}€</span>
                               </div>
+                              
+                              {/* Informations de scan QR */}
+                              {reservation.handovers && reservation.handovers.length > 0 && (
+                                <div className="mt-2 space-y-1">
+                                  {reservation.handovers?.map((handover: Handover) => (
+                                    <div key={handover.id} className="flex items-center space-x-2 text-xs">
+                                      <Clock className="h-3 w-3 text-gray-500" />
+                                      <span className="text-gray-600">
+                                        {handover.type === 'pickup' ? 'Retrait' : 'Restitution'}:
+                                      </span>
+                                      {handover.actual_date ? (
+                                        <span className="text-green-600 font-medium">
+                                          {new Date(handover.actual_date).toLocaleString('fr-FR')}
+                                        </span>
+                                      ) : (
+                                        <span className="text-yellow-600">
+                                          En attente
+                                        </span>
+                                      )}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </div>
-                          {getStatusBadge(reservation.status)}
+                          <div className="flex flex-col items-end space-y-2">
+                            {getStatusBadge(reservation.status)}
+                            
+                            {/* Boutons d'action pour les réservations en attente */}
+                            {reservation.status === 'pending' && (
+                              <div className="flex space-x-2">
+                                <button
+                                  onClick={() => handleAcceptReservation(reservation.id)}
+                                  className="flex items-center space-x-1 px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 transition text-sm"
+                                >
+                                  <CheckCircle className="h-4 w-4" />
+                                  <span>Accepter</span>
+                                </button>
+                                <button
+                                  onClick={() => handleRejectReservation(reservation.id)}
+                                  className="flex items-center space-x-1 px-3 py-1 bg-red-600 text-white rounded-lg hover:bg-red-700 transition text-sm"
+                                >
+                                  <XCircle className="h-4 w-4" />
+                                  <span>Refuser</span>
+                                </button>
+                              </div>
+                            )}
+                            
+                            {/* Message pour les réservations confirmées */}
+                            {reservation.status === 'confirmed' && (
+                              <div className="flex items-center space-x-1 text-green-600 text-sm">
+                                <CheckCircle className="h-4 w-4" />
+                                <span>Confirmée</span>
+                              </div>
+                            )}
+                            
+                            {/* Message pour les réservations refusées */}
+                            {reservation.status === 'rejected' && (
+                              <div className="flex items-center space-x-1 text-red-600 text-sm">
+                                <XCircle className="h-4 w-4" />
+                                <span>Refusée</span>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {activeTab === 'handovers' && (
+              <div className="space-y-6">
+                {/* Gestionnaire d'adresse */}
+                <AddressManager />
+                
+                {/* Liste des réservations avec handovers */}
+                <div className="bg-white rounded-xl shadow-lg p-6">
+                  <h3 className="text-lg font-semibold mb-4">Handovers par Réservation</h3>
+                  
+                  {receivedReservations.filter(r => r.status === 'confirmed').length === 0 ? (
+                    <div className="text-center py-8">
+                      <QrCode className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                      <p className="text-gray-500 mb-2">Aucune réservation confirmée</p>
+                      <p className="text-sm text-gray-400">
+                        Les handovers ne peuvent être créés que pour les réservations confirmées
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {receivedReservations
+                        .filter(reservation => reservation.status === 'confirmed')
+                        .map((reservation) => (
+                          <div key={reservation.id} className="border rounded-lg p-4">
+                            <div className="flex items-center justify-between mb-3">
+                              <div>
+                                <h4 className="font-semibold text-lg">{reservation.object?.title}</h4>
+                                <p className="text-sm text-gray-600">
+                                  Locataire: {reservation.renter?.full_name}
+                                </p>
+                                <p className="text-sm text-gray-600">
+                                  Du {new Date(reservation.start_date).toLocaleDateString('fr-FR')} au {new Date(reservation.end_date).toLocaleDateString('fr-FR')}
+                                </p>
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <Euro className="h-4 w-4 text-gray-600" />
+                                <span className="font-medium">{reservation.total_price}€</span>
+                              </div>
+                            </div>
+                            
+                            <HandoversManager reservationId={reservation.id} isOwner={true} />
+                          </div>
+                        ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'reviews' && (
+              <div className="space-y-6">
+                {/* Mes locations terminées - Avis pour les propriétaires */}
+                <CompletedReservations 
+                  reservations={receivedReservations} 
+                  isOwner={true} 
+                />
+                
+                {/* Mes réservations terminées - Avis pour les locataires */}
+                <CompletedReservations 
+                  reservations={myReservations} 
+                  isOwner={false} 
+                />
               </div>
             )}
           </div>

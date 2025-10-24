@@ -1,6 +1,12 @@
+export type UserRole = 'client' | 'loueur' | 'admin';
+
 export type ObjectStatus = 'available' | 'rented' | 'unavailable';
 
-export type ReservationStatus = 'pending' | 'confirmed' | 'ongoing' | 'completed' | 'cancelled';
+export type ReservationStatus = 'pending' | 'confirmed' | 'ongoing' | 'completed' | 'cancelled' | 'rejected';
+
+export type HandoverStatus = 'pending' | 'picked_up' | 'returned' | 'cancelled';
+
+export type HandoverType = 'pickup' | 'return';
 
 export type Category =
   | 'Bricolage'
@@ -25,6 +31,8 @@ export interface Profile {
   country: string | null;
   latitude: number | null;
   longitude: number | null;
+  role: UserRole;
+  is_verified: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -61,6 +69,7 @@ export interface Reservation {
   object?: RentalObject;
   renter?: Profile;
   owner?: Profile;
+  handovers?: Handover[];
 }
 
 export interface Message {
@@ -151,6 +160,7 @@ export interface AuthCredentials {
 
 export interface SignupCredentials extends AuthCredentials {
   full_name: string;
+  role: UserRole;
 }
 
 export interface GeocodeResult {
@@ -177,4 +187,31 @@ export interface AddressComponents {
   administrative_area_level_1?: string;
   country?: string;
   postal_code?: string;
+}
+
+export interface Handover {
+  id: string;
+  reservation_id: string;
+  type: HandoverType;
+  status: HandoverStatus;
+  qr_code: string;
+  pickup_address: string;
+  pickup_latitude: number | null;
+  pickup_longitude: number | null;
+  scheduled_date: string;
+  actual_date: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  reservation?: Reservation;
+}
+
+export interface CreateHandoverInput {
+  reservation_id: string;
+  type: HandoverType;
+  pickup_address: string;
+  pickup_latitude?: number;
+  pickup_longitude?: number;
+  scheduled_date: string;
+  notes?: string;
 }

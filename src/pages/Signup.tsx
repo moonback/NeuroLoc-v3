@@ -3,7 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth.service';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
+import { RoleSelector } from '../components/common/RoleSelector';
 import { Package } from 'lucide-react';
+import { UserRole } from '../types';
 import toast from 'react-hot-toast';
 
 export const Signup = () => {
@@ -12,7 +14,8 @@ export const Signup = () => {
     full_name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: 'client' as UserRole
   });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -51,7 +54,8 @@ export const Signup = () => {
       await authService.signup({
         email: formData.email,
         password: formData.password,
-        full_name: formData.full_name
+        full_name: formData.full_name,
+        role: formData.role
       });
       toast.success('Compte créé avec succès !');
       navigate('/dashboard');
@@ -113,6 +117,11 @@ export const Signup = () => {
               onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
               error={errors.confirmPassword}
               required
+            />
+
+            <RoleSelector
+              selectedRole={formData.role}
+              onRoleChange={(role) => setFormData({ ...formData, role })}
             />
 
             <Button type="submit" className="w-full" isLoading={isLoading}>

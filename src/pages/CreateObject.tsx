@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { objectsService } from '../services/objects.service';
 import { ObjectForm } from '../components/objects/ObjectForm';
 import { CreateObjectInput } from '../types';
+import { LoueurOnly } from '../components/common/RoleGuard';
 import toast from 'react-hot-toast';
 
 export const CreateObject = () => {
@@ -19,19 +20,21 @@ export const CreateObject = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-xl shadow-lg p-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Publier un objet
-          </h1>
-          <p className="text-gray-600 mb-8">
-            Remplissez les informations pour mettre votre objet en location
-          </p>
+    <LoueurOnly>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-xl shadow-lg p-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Publier un objet
+            </h1>
+            <p className="text-gray-600 mb-8">
+              Remplissez les informations pour mettre votre objet en location
+            </p>
 
-          <ObjectForm onSubmit={handleSubmit} submitLabel="Publier l'objet" />
+            <ObjectForm onSubmit={handleSubmit} submitLabel="Publier l'objet" />
+          </div>
         </div>
       </div>
-    </div>
+    </LoueurOnly>
   );
 };

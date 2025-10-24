@@ -2,13 +2,14 @@ import { supabase } from './supabase';
 import { AuthCredentials, SignupCredentials, Profile } from '../types';
 
 export const authService = {
-  async signup({ email, password, full_name }: SignupCredentials) {
+  async signup({ email, password, full_name, role }: SignupCredentials) {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          full_name
+          full_name,
+          role
         }
       }
     });
@@ -70,6 +71,21 @@ export const authService = {
       .from('profiles')
       .update({
         ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async updateRole(userId: string, newRole: string) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({
+        role: newRole,
         updated_at: new Date().toISOString()
       })
       .eq('id', userId)

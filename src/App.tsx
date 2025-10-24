@@ -16,6 +16,7 @@ import { EditObject } from './pages/EditObject';
 import { Messages } from './pages/Messages';
 import { Profile } from './pages/Profile';
 import { PublicProfile } from './pages/PublicProfile';
+import { QRCodeScannerPage } from './pages/QRCodeScanner';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, loading } = useAuth();
@@ -66,6 +67,14 @@ function App() {
             <Route path="/objects/:id" element={<ObjectDetails />} />
             <Route path="/profile/:userId" element={<PublicProfile />} />
 
+            <Route
+              path="/qr-scanner"
+              element={
+                <ProtectedRoute>
+                  <QRCodeScannerPage />
+                </ProtectedRoute>
+              }
+            />
             <Route
               path="/dashboard"
               element={
