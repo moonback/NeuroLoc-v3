@@ -1,52 +1,52 @@
-import { User } from 'lucide-react';
+import { ReactNode } from 'react';
 
 interface AvatarProps {
-  src?: string | null;
+  src?: string;
   alt?: string;
+  name?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
-  fallback?: string;
+  children?: ReactNode;
 }
 
 export const Avatar = ({ 
   src, 
-  alt = 'Avatar', 
+  alt, 
+  name, 
   size = 'md', 
   className = '',
-  fallback 
+  children 
 }: AvatarProps) => {
-  const sizeClasses = {
-    sm: 'w-8 h-8',
-    md: 'w-12 h-12',
-    lg: 'w-16 h-16',
-    xl: 'w-24 h-24'
+  const sizes = {
+    sm: 'w-8 h-8 text-xs',
+    md: 'w-10 h-10 text-sm',
+    lg: 'w-12 h-12 text-base',
+    xl: 'w-16 h-16 text-lg'
   };
-
-  const iconSizes = {
-    sm: 'h-4 w-4',
-    md: 'h-6 w-6',
-    lg: 'h-8 w-8',
-    xl: 'h-12 w-12'
+  
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
-
+  
   return (
-    <div className={`${sizeClasses[size]} rounded-full bg-gray-200 flex items-center justify-center overflow-hidden ${className}`}>
+    <div className={`${sizes[size]} rounded-full bg-brand-500 flex items-center justify-center text-white font-semibold overflow-hidden ${className}`}>
       {src ? (
-        <img
-          src={src}
-          alt={alt}
+        <img 
+          src={src} 
+          alt={alt || name || 'Avatar'} 
           className="w-full h-full object-cover"
         />
+      ) : children ? (
+        children
+      ) : name ? (
+        getInitials(name)
       ) : (
-        <div className="flex items-center justify-center">
-          {fallback ? (
-            <span className="text-gray-600 font-medium text-sm">
-              {fallback.charAt(0).toUpperCase()}
-            </span>
-          ) : (
-            <User className={`${iconSizes[size]} text-gray-400`} />
-          )}
-        </div>
+        '?'
       )}
     </div>
   );

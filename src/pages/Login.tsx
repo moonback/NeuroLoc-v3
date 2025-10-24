@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth.service';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
-import { Package } from 'lucide-react';
+import { Card, CardHeader, CardContent, CardFooter } from '../components/common/Card';
+import { Package, Mail, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const Login = () => {
@@ -28,50 +29,58 @@ export const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-neutral-50 flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <div className="flex flex-col items-center mb-8">
-            <div className="bg-blue-600 p-3 rounded-full mb-4">
-              <Package className="h-10 w-10 text-white" />
+        <Card className="shadow-large">
+          <CardHeader>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-brand-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Package className="h-8 w-8 text-white" />
+              </div>
+              <h1 className="text-3xl font-bold text-neutral-900 mb-2">Connexion</h1>
+              <p className="text-neutral-600">Accédez à votre compte NeuroLoc</p>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Connexion</h1>
-            <p className="text-gray-600 mt-2">Accédez à votre compte NeuroLoc</p>
-          </div>
+          </CardHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <Input
-              label="Email"
-              type="email"
-              placeholder="votre@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <Input
+                label="Email"
+                type="email"
+                placeholder="votre@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                leftIcon={Mail}
+                required
+              />
 
-            <Input
-              label="Mot de passe"
-              type="password"
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
+              <Input
+                label="Mot de passe"
+                type="password"
+                placeholder="••••••••"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                leftIcon={Lock}
+                required
+              />
 
-            <Button type="submit" className="w-full" isLoading={isLoading}>
-              Se connecter
-            </Button>
-          </form>
+              <Button type="submit" className="w-full" isLoading={isLoading}>
+                Se connecter
+              </Button>
+            </form>
+          </CardContent>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
-              Pas encore de compte ?{' '}
-              <Link to="/signup" className="text-blue-600 hover:text-blue-700 font-medium">
-                S'inscrire
-              </Link>
-            </p>
-          </div>
-        </div>
+          <CardFooter>
+            <div className="text-center w-full">
+              <p className="text-neutral-600">
+                Pas encore de compte ?{' '}
+                <Link to="/signup" className="text-brand-600 hover:text-brand-700 font-medium transition-colors duration-200">
+                  S'inscrire
+                </Link>
+              </p>
+            </div>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );

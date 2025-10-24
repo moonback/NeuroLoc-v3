@@ -3,6 +3,8 @@ import { objectsService } from '../services/objects.service';
 import { ObjectForm } from '../components/objects/ObjectForm';
 import { CreateObjectInput } from '../types';
 import { LoueurOnly } from '../components/common/RoleGuard';
+import { Card, CardContent, CardHeader } from '../components/common/Card';
+import { Plus } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export const CreateObject = () => {
@@ -13,26 +15,38 @@ export const CreateObject = () => {
       const newObject = await objectsService.createObject(data);
       toast.success('Objet publié avec succès !');
       navigate(`/objects/${newObject.id}`);
-    } catch (error: any) {
-      toast.error(error.message || 'Erreur lors de la création de l\'objet');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      toast.error(errorMessage || 'Erreur lors de la création de l\'objet');
       throw error;
     }
   };
 
   return (
     <LoueurOnly>
-      <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              Publier un objet
-            </h1>
-            <p className="text-gray-600 mb-8">
-              Remplissez les informations pour mettre votre objet en location
-            </p>
+      <div className="min-h-screen bg-neutral-50 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+          <Card className="shadow-large">
+            <CardHeader>
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 bg-brand-100 rounded-xl flex items-center justify-center">
+                  <Plus className="h-5 w-5 text-brand-600" />
+                </div>
+                <div>
+                  <h1 className="text-heading text-3xl font-bold">
+                    Publier un objet
+                  </h1>
+                  <p className="text-body mt-1">
+                    Remplissez les informations pour mettre votre objet en location
+                  </p>
+                </div>
+              </div>
+            </CardHeader>
 
-            <ObjectForm onSubmit={handleSubmit} submitLabel="Publier l'objet" />
-          </div>
+            <CardContent>
+              <ObjectForm onSubmit={handleSubmit} submitLabel="Publier l'objet" />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </LoueurOnly>

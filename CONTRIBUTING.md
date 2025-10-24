@@ -1,134 +1,122 @@
-# Guide de contribution NeuroLoc
+# 🤝 Guide de Contribution NeuroLoc
 
-## Bienvenue ! 👋
+## Bienvenue !
 
 Merci de votre intérêt pour contribuer à NeuroLoc ! Ce guide vous aidera à comprendre comment participer efficacement au développement de la plateforme.
 
-## 🎯 Comment contribuer
-
-### Signaler un bug
-- Utilisez le template d'issue "Bug Report"
-- Incluez des étapes de reproduction claires
-- Ajoutez des captures d'écran si nécessaire
-- Précisez votre environnement (OS, navigateur, version)
-
-### Proposer une fonctionnalité
-- Utilisez le template d'issue "Feature Request"
-- Décrivez le problème que cela résout
-- Expliquez la solution proposée
-- Considérez les alternatives
-
-### Contribuer au code
-- Forkez le repository
-- Créez une branche pour votre fonctionnalité
-- Suivez les conventions de code
-- Ajoutez des tests si nécessaire
-- Soumettez une Pull Request
-
-## 🛠️ Configuration de l'environnement
+## 🚀 Premiers Pas
 
 ### Prérequis
-- Node.js 18+
-- npm ou yarn
-- Git
+- Connaissance de React, TypeScript et Tailwind CSS
+- Compte GitHub
+- Node.js 18+ installé
 - Compte Supabase (pour les tests)
-- Compte Stripe (pour les tests)
 
-### Installation
+### Configuration de l'Environnement
+
+1. **Fork et Clone**
 ```bash
-# Cloner le repository
 git clone https://github.com/votre-username/neuroloc.git
 cd neuroloc
-
-# Installer les dépendances
-npm install
-
-# Configurer les variables d'environnement
-cp .env.example .env
-# Éditer .env avec vos clés de test
 ```
 
-### Scripts de développement
+2. **Installation**
 ```bash
-npm run dev          # Serveur de développement
-npm run build        # Build de production
-npm run lint         # Vérification ESLint
-npm run typecheck    # Vérification TypeScript
-npm run test         # Tests unitaires (à venir)
+npm install
 ```
 
-## 📝 Conventions de code
-
-### Structure des commits
-Utilisez le format [Conventional Commits](https://www.conventionalcommits.org/) :
-
-```
-type(scope): description
-
-feat(auth): add password reset functionality
-fix(ui): resolve mobile navigation issue
-docs(readme): update installation instructions
-refactor(api): simplify user service methods
+3. **Configuration**
+```bash
+cp .env.example .env.local
+# Remplir les variables d'environnement
 ```
 
-**Types disponibles :**
-- `feat`: Nouvelle fonctionnalité
-- `fix`: Correction de bug
-- `docs`: Documentation
-- `style`: Formatage, point-virgules, etc.
-- `refactor`: Refactoring de code
-- `test`: Ajout de tests
-- `chore`: Tâches de maintenance
+4. **Vérification**
+```bash
+npm run dev
+npm run lint
+npm run typecheck
+```
 
-### Conventions de nommage
+## 📋 Types de Contributions
 
-#### Variables et fonctions
+### 🐛 Signalement de Bugs
+- Utilisez le template d'issue GitHub
+- Incluez des étapes de reproduction
+- Ajoutez des captures d'écran si nécessaire
+- Spécifiez votre environnement (OS, navigateur, version)
+
+### ✨ Nouvelles Fonctionnalités
+- Ouvrez d'abord une issue pour discuter
+- Attendez l'approbation avant de commencer
+- Suivez les conventions de code existantes
+- Ajoutez des tests si applicable
+
+### 📚 Documentation
+- Améliorez la documentation existante
+- Ajoutez des exemples d'utilisation
+- Corrigez les erreurs de typographie
+- Traduisez en d'autres langues
+
+### 🎨 Améliorations UI/UX
+- Respectez le design system existant
+- Testez sur différents écrans
+- Vérifiez l'accessibilité
+- Incluez des maquettes si nécessaire
+
+## 🛠️ Standards de Code
+
+### Conventions de Nommage
+
+#### Variables et Fonctions
 ```typescript
-// camelCase pour les variables et fonctions
-const userName = 'john_doe';
-const calculateTotalPrice = (price: number, days: number) => price * days;
+// ✅ Bon
+const userName = 'john';
+const calculateTotalPrice = () => {};
 
-// PascalCase pour les composants React
-const UserProfile = () => { /* ... */ };
-
-// UPPER_SNAKE_CASE pour les constantes
-const API_BASE_URL = 'https://api.neuroloc.com';
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+// ❌ Éviter
+const user_name = 'john';
+const CalculateTotalPrice = () => {};
 ```
 
-#### Fichiers et dossiers
-```
-// kebab-case pour les fichiers
-user-profile.tsx
-auth-service.ts
-object-card.tsx
-
-// PascalCase pour les composants React
-UserProfile.tsx
-AuthService.ts
-ObjectCard.tsx
-```
-
-#### Types et interfaces
+#### Composants React
 ```typescript
-// PascalCase pour les types et interfaces
+// ✅ Bon
+export const UserProfile: React.FC<UserProfileProps> = ({ user }) => {
+  return <div>{user.name}</div>;
+};
+
+// ❌ Éviter
+export const userProfile = ({ user }) => {
+  return <div>{user.name}</div>;
+};
+```
+
+#### Types et Interfaces
+```typescript
+// ✅ Bon
 interface UserProfile {
   id: string;
   name: string;
 }
 
-type ReservationStatus = 'pending' | 'confirmed' | 'completed';
+type UserRole = 'client' | 'loueur' | 'admin';
+
+// ❌ Éviter
+interface userProfile {
+  id: string;
+  name: string;
+}
 ```
 
-### Structure des composants React
+### Structure des Composants
 
 ```typescript
 // 1. Imports
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { Button } from './common/Button';
+import { Button } from '../common/Button';
 
-// 2. Types et interfaces
+// 2. Types
 interface ComponentProps {
   title: string;
   onAction: () => void;
@@ -140,9 +128,8 @@ export const ComponentName: React.FC<ComponentProps> = ({
   onAction 
 }) => {
   // 4. Hooks
-  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
-
+  
   // 5. Handlers
   const handleClick = async () => {
     setIsLoading(true);
@@ -154,21 +141,17 @@ export const ComponentName: React.FC<ComponentProps> = ({
       setIsLoading(false);
     }
   };
-
+  
   // 6. Effects
   useEffect(() => {
     // Side effects
   }, []);
-
+  
   // 7. Render
   return (
     <div className="component-container">
       <h2>{title}</h2>
-      <Button 
-        onClick={handleClick}
-        loading={isLoading}
-        disabled={!user}
-      >
+      <Button onClick={handleClick} loading={isLoading}>
         Action
       </Button>
     </div>
@@ -176,270 +159,248 @@ export const ComponentName: React.FC<ComponentProps> = ({
 };
 ```
 
-### Gestion des erreurs
+### Gestion d'État
 
+#### Hooks Personnalisés
 ```typescript
-// Toujours utiliser try/catch pour les opérations async
-try {
-  const result = await apiService.createObject(data);
-  toast.success('Objet créé avec succès');
-  return result;
-} catch (error) {
-  console.error('Error creating object:', error);
-  toast.error(error.message || 'Une erreur est survenue');
-  throw error;
-}
-
-// Validation des données d'entrée
-const validateObjectData = (data: CreateObjectInput): string[] => {
-  const errors: string[] = [];
-  
-  if (!data.title?.trim()) {
-    errors.push('Le titre est requis');
-  }
-  
-  if (data.price_per_day <= 0) {
-    errors.push('Le prix doit être positif');
-  }
-  
-  return errors;
-};
-```
-
-### Gestion d'état
-
-```typescript
-// Utiliser des hooks personnalisés pour la logique métier
-export const useObjects = (filters?: SearchFilters) => {
+// ✅ Bon - Hook personnalisé
+export const useObjects = () => {
   const [objects, setObjects] = useState<RentalObject[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
+  
   const fetchObjects = useCallback(async () => {
     try {
       setLoading(true);
-      setError(null);
-      const data = await objectsService.getObjects(filters);
+      const data = await objectsService.getObjects();
       setObjects(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Erreur inconnue');
+    } catch (error) {
+      console.error('Error fetching objects:', error);
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, []);
+  
+  return { objects, loading, fetchObjects };
+};
+```
 
-  useEffect(() => {
-    fetchObjects();
-  }, [fetchObjects]);
+#### Éviter les Anti-patterns
+```typescript
+// ❌ Éviter - Props drilling
+const Parent = () => {
+  const [data, setData] = useState();
+  return <Child data={data} setData={setData} />;
+};
 
-  return { objects, loading, error, refetch: fetchObjects };
+// ✅ Préférer - Hook personnalisé
+const Parent = () => {
+  const { data, setData } = useData();
+  return <Child />;
+};
+```
+
+### Styles et Design
+
+#### Classes Tailwind
+```typescript
+// ✅ Bon - Classes cohérentes
+<div className="bg-white rounded-xl shadow-soft p-6">
+  <h2 className="text-heading text-xl font-semibold mb-4">
+    Titre
+  </h2>
+  <p className="text-body">
+    Contenu
+  </p>
+</div>
+
+// ❌ Éviter - Classes incohérentes
+<div className="bg-gray-100 rounded-lg shadow-md p-4">
+  <h2 className="text-gray-900 text-lg font-bold mb-2">
+    Titre
+  </h2>
+  <p className="text-gray-600">
+    Contenu
+  </p>
+</div>
+```
+
+#### Composants Réutilisables
+```typescript
+// ✅ Bon - Utilisation des composants communs
+import { Button, Card, CardContent } from '../common';
+
+export const MyComponent = () => {
+  return (
+    <Card>
+      <CardContent>
+        <Button variant="primary" size="lg">
+          Action
+        </Button>
+      </CardContent>
+    </Card>
+  );
 };
 ```
 
 ## 🧪 Tests
 
-### Tests unitaires (à venir)
+### Tests Unitaires
 ```typescript
-// Exemple de test avec Jest et React Testing Library
-import { render, screen, fireEvent } from '@testing-library/react';
+// Exemple de test
+import { render, screen } from '@testing-library/react';
 import { ObjectCard } from './ObjectCard';
 
 describe('ObjectCard', () => {
-  const mockObject = {
-    id: '1',
-    title: 'Test Object',
-    price_per_day: 10,
-    // ... autres propriétés
-  };
-
-  it('should render object information', () => {
+  it('should display object title', () => {
+    const mockObject = {
+      id: '1',
+      title: 'Test Object',
+      price_per_day: 10
+    };
+    
     render(<ObjectCard object={mockObject} />);
     
     expect(screen.getByText('Test Object')).toBeInTheDocument();
-    expect(screen.getByText('10€/jour')).toBeInTheDocument();
-  });
-
-  it('should handle click events', () => {
-    const onSelect = jest.fn();
-    render(<ObjectCard object={mockObject} onSelect={onSelect} />);
-    
-    fireEvent.click(screen.getByRole('button'));
-    expect(onSelect).toHaveBeenCalledWith(mockObject);
   });
 });
 ```
 
-### Tests d'intégration
-- Tests des services API
-- Tests des hooks personnalisés
-- Tests des flux utilisateur complets
+### Tests d'Intégration
+- Testez les flux complets utilisateur
+- Vérifiez les appels API
+- Testez les interactions entre composants
 
-## 📚 Documentation
+## 📝 Commits et Pull Requests
 
-### Documentation du code
+### Messages de Commit
+```bash
+# Format : type(scope): description
+
+feat(auth): add two-factor authentication
+fix(ui): resolve button alignment issue
+docs(readme): update installation instructions
+style(components): format code with prettier
+refactor(api): simplify user service
+test(auth): add login component tests
+```
+
+### Pull Request
+
+#### Template PR
+```markdown
+## Description
+Brève description des changements
+
+## Type de changement
+- [ ] Bug fix
+- [ ] Nouvelle fonctionnalité
+- [ ] Breaking change
+- [ ] Documentation
+
+## Checklist
+- [ ] Code testé localement
+- [ ] Tests ajoutés/mis à jour
+- [ ] Documentation mise à jour
+- [ ] Pas de conflits avec la branche main
+- [ ] Code review effectué
+```
+
+#### Processus de Review
+1. **Auto-review** : Vérifiez votre propre code
+2. **Tests** : Assurez-vous que tout fonctionne
+3. **Documentation** : Mettez à jour si nécessaire
+4. **Review** : Attendez l'approbation d'un mainteneur
+
+## 🏗️ Architecture et Patterns
+
+### Structure des Dossiers
+```
+src/
+├── components/          # Composants React
+│   ├── common/         # Composants réutilisables
+│   ├── layout/         # Composants de mise en page
+│   └── [feature]/      # Composants par fonctionnalité
+├── pages/              # Pages de l'application
+├── hooks/              # Hooks personnalisés
+├── services/           # Services API
+├── types/              # Types TypeScript
+└── utils/              # Utilitaires
+```
+
+### Services API
 ```typescript
-/**
- * Calcule le prix total d'une réservation
- * @param pricePerDay - Prix par jour en euros
- * @param startDate - Date de début (format ISO)
- * @param endDate - Date de fin (format ISO)
- * @returns Prix total calculé
- * @throws {Error} Si les dates sont invalides
- */
-export const calculateTotalPrice = (
-  pricePerDay: number,
-  startDate: string,
-  endDate: string
-): number => {
-  const start = new Date(startDate);
-  const end = new Date(endDate);
-  
-  if (start >= end) {
-    throw new Error('La date de fin doit être après la date de début');
+// Structure d'un service
+export const objectsService = {
+  async getObjects(): Promise<RentalObject[]> {
+    try {
+      const { data, error } = await supabase
+        .from('objects')
+        .select('*, owner:profiles(*)');
+      
+      if (error) throw error;
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching objects:', error);
+      throw error;
+    }
   }
-  
-  const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-  return pricePerDay * days;
 };
 ```
 
-### Documentation des composants
+## 🐛 Débogage
+
+### Outils Recommandés
+- **React DevTools** : Inspection des composants
+- **Supabase Dashboard** : Monitoring de la DB
+- **Stripe Dashboard** : Suivi des paiements
+- **Browser DevTools** : Debugging général
+
+### Logs et Monitoring
 ```typescript
-/**
- * Composant de carte d'objet pour l'affichage dans les listes
- * 
- * @example
- * ```tsx
- * <ObjectCard 
- *   object={rentalObject}
- *   onSelect={(obj) => navigate(`/objects/${obj.id}`)}
- * />
- * ```
- */
-interface ObjectCardProps {
-  /** Objet à afficher */
-  object: RentalObject;
-  /** Callback appelé lors de la sélection */
-  onSelect?: (object: RentalObject) => void;
-  /** Afficher le bouton de sélection */
-  showSelectButton?: boolean;
-}
+// ✅ Bon - Logging structuré
+console.error('Error creating object:', {
+  error: error.message,
+  userId: user.id,
+  objectData: objectData
+});
+
+// ❌ Éviter - Logs non structurés
+console.log('Error');
 ```
 
-## 🔍 Code Review
+## 📚 Ressources
 
-### Checklist pour les Pull Requests
+### Documentation
+- [React Documentation](https://react.dev/)
+- [TypeScript Handbook](https://www.typescriptlang.org/docs/)
+- [Tailwind CSS](https://tailwindcss.com/docs)
+- [Supabase Docs](https://supabase.com/docs)
 
-#### Fonctionnalité
-- [ ] La fonctionnalité répond au besoin exprimé
-- [ ] Le code est testé et fonctionne
-- [ ] Les cas d'erreur sont gérés
-- [ ] La performance est acceptable
+### Outils de Développement
+- **VS Code** avec extensions React/TypeScript
+- **ESLint** pour la qualité du code
+- **Prettier** pour le formatage
+- **GitHub Desktop** pour Git
 
-#### Code Quality
-- [ ] Le code suit les conventions établies
-- [ ] Les noms de variables/fonctions sont explicites
-- [ ] Pas de code dupliqué
-- [ ] Les imports sont optimisés
+## 🆘 Aide et Support
 
-#### Sécurité
-- [ ] Pas de données sensibles exposées
-- [ ] Validation des entrées utilisateur
-- [ ] Gestion sécurisée des uploads
-- [ ] Respect des policies RLS
+### Questions Fréquentes
+- **Problème de build** : Vérifiez Node.js 18+
+- **Erreurs Supabase** : Vérifiez les variables d'environnement
+- **Problèmes de style** : Utilisez les classes Tailwind existantes
 
-#### Documentation
-- [ ] Le code est documenté si nécessaire
-- [ ] Les changements sont documentés
-- [ ] Les tests sont ajoutés si applicable
-
-### Processus de review
-
-1. **Auto-review** : Vérifiez votre code avant de soumettre
-2. **Tests** : Assurez-vous que tout fonctionne
-3. **Documentation** : Mettez à jour la doc si nécessaire
-4. **Soumission** : Créez une PR avec une description claire
-5. **Review** : Répondez aux commentaires constructivement
-6. **Merge** : Une fois approuvé, mergez proprement
-
-## 🚀 Déploiement
-
-### Branches
-- `main` : Version de production stable
-- `develop` : Branche de développement
-- `feature/*` : Nouvelles fonctionnalités
-- `hotfix/*` : Corrections urgentes
-- `release/*` : Préparation des releases
-
-### Processus de release
-1. Créer une branche `release/v1.x.x`
-2. Finaliser les fonctionnalités
-3. Mettre à jour la documentation
-4. Tester en environnement de staging
-5. Créer un tag de version
-6. Déployer en production
-7. Merger vers `main`
-
-## 🤝 Communication
-
-### Channels de communication
-- **Issues GitHub** : Bugs et fonctionnalités
-- **Discussions GitHub** : Questions générales
-- **Pull Requests** : Reviews et discussions techniques
-
-### Guidelines de communication
-- Soyez respectueux et constructif
-- Utilisez le français pour la communication
-- Soyez précis dans vos descriptions
-- Répondez dans des délais raisonnables
-
-## 📋 Templates
-
-### Template d'issue - Bug Report
-```markdown
-## Description du bug
-Une description claire du problème.
-
-## Étapes de reproduction
-1. Aller à '...'
-2. Cliquer sur '...'
-3. Voir l'erreur
-
-## Comportement attendu
-Ce qui devrait se passer.
-
-## Environnement
-- OS: [ex: Windows 10]
-- Navigateur: [ex: Chrome 91]
-- Version: [ex: 1.2.3]
-
-## Captures d'écran
-Si applicable, ajoutez des captures d'écran.
-```
-
-### Template d'issue - Feature Request
-```markdown
-## Description de la fonctionnalité
-Une description claire de la fonctionnalité souhaitée.
-
-## Problème résolu
-Quel problème cette fonctionnalité résout-elle ?
-
-## Solution proposée
-Décrivez la solution que vous aimeriez voir.
-
-## Alternatives considérées
-Décrivez les alternatives que vous avez considérées.
-
-## Contexte additionnel
-Ajoutez tout autre contexte ou captures d'écran.
-```
+### Communication
+- **GitHub Issues** : Pour les bugs et fonctionnalités
+- **GitHub Discussions** : Pour les questions générales
+- **Pull Request Comments** : Pour les discussions spécifiques
 
 ## 🎉 Reconnaissance
 
-Les contributeurs seront reconnus dans :
-- Le fichier CONTRIBUTORS.md
-- Les release notes
-- La documentation du projet
+Les contributeurs sont reconnus dans :
+- **README.md** : Liste des contributeurs
+- **Releases** : Notes de version
+- **GitHub** : Profils des contributeurs
 
-Merci de contribuer à faire de NeuroLoc une plateforme exceptionnelle ! 🚀
+---
+
+Merci de contribuer à NeuroLoc ! Ensemble, nous construisons l'avenir de la location d'objets entre particuliers. 🚀

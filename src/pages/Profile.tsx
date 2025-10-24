@@ -5,6 +5,7 @@ import { Profile as ProfileType } from '../types';
 import { Button } from '../components/common/Button';
 import { Input } from '../components/common/Input';
 import { Loader } from '../components/common/Loader';
+import { Card, CardContent, CardHeader } from '../components/common/Card';
 import { User, Mail, Calendar, Camera, Save, Edit3, Lock, Eye, EyeOff, MapPin } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { AddressAutocomplete } from '../components/common/AddressAutocomplete';
@@ -72,7 +73,7 @@ export const Profile = () => {
     }));
   };
 
-  const handleAddressSelect = async (selectedAddress: string, formattedAddress: string) => {
+  const handleAddressSelect = async (_selectedAddress: string, formattedAddress: string) => {
     try {
       setLoading(true);
       const geocodeResult = await geolocationService.geocodeAddress(formattedAddress);
@@ -201,14 +202,14 @@ export const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-neutral-50 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-md mb-8">
-          <div className="px-6 py-8">
-            <div className="flex items-center space-x-6">
+        <Card className="shadow-large mb-8">
+          <CardContent className="p-8">
+            <div className="flex items-center gap-6">
               <div className="relative">
-                <div className="w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                <div className="w-24 h-24 rounded-full bg-neutral-200 flex items-center justify-center overflow-hidden">
                   {formData.avatar_url ? (
                     <img
                       src={formData.avatar_url}
@@ -216,11 +217,11 @@ export const Profile = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <User className="h-12 w-12 text-gray-400" />
+                    <User className="h-12 w-12 text-neutral-400" />
                   )}
                 </div>
                 {isEditing && (
-                  <label className="absolute bottom-0 right-0 bg-blue-600 text-white p-2 rounded-full cursor-pointer hover:bg-blue-700 transition">
+                  <label className="absolute bottom-0 right-0 bg-brand-600 text-white p-2 rounded-full cursor-pointer hover:bg-brand-700 transition">
                     <Camera className="h-4 w-4" />
                     <input
                       type="file"
@@ -232,27 +233,26 @@ export const Profile = () => {
                 )}
               </div>
               <div className="flex-1">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                <h1 className="text-heading text-3xl font-bold mb-2">
                   {profile.full_name || 'Utilisateur'}
                 </h1>
-                <p className="text-gray-600 mb-4">{profile.email}</p>
-                <div className="flex items-center text-sm text-gray-500">
+                <p className="text-body mb-4">{profile.email}</p>
+                <div className="flex items-center text-sm text-muted">
                   <Calendar className="h-4 w-4 mr-2" />
                   Membre depuis {formatDate(profile.created_at)}
                 </div>
               </div>
-              <div className="flex space-x-3">
+              <div className="flex gap-3">
                 {!isEditing ? (
                   <Button
                     onClick={() => setIsEditing(true)}
                     variant="secondary"
-                    className="flex items-center space-x-2"
+                    leftIcon={<Edit3 className="h-4 w-4" />}
                   >
-                    <Edit3 className="h-4 w-4" />
-                    <span>Modifier</span>
+                    Modifier
                   </Button>
                 ) : (
-                  <div className="flex space-x-2">
+                  <div className="flex gap-2">
                     <Button
                       onClick={() => setIsEditing(false)}
                       variant="ghost"
@@ -262,25 +262,29 @@ export const Profile = () => {
                     <Button
                       onClick={handleSaveProfile}
                       isLoading={loading}
-                      className="flex items-center space-x-2"
+                      leftIcon={<Save className="h-4 w-4" />}
                     >
-                      <Save className="h-4 w-4" />
-                      <span>Sauvegarder</span>
+                      Sauvegarder
                     </Button>
                   </div>
                 )}
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Informations personnelles */}
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="px-6 py-4 border-b">
-              <h2 className="text-xl font-semibold text-gray-900">Informations personnelles</h2>
-            </div>
-            <div className="p-6 space-y-6">
+          <Card className="shadow-large">
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center">
+                  <User className="h-4 w-4 text-brand-600" />
+                </div>
+                <h2 className="text-heading text-xl font-semibold">Informations personnelles</h2>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
               <div>
                 <Input
                   label="Nom complet"
@@ -298,9 +302,9 @@ export const Profile = () => {
                   name="email"
                   value={profile.email}
                   disabled
-                  className="bg-gray-50"
+                  className="bg-neutral-50"
                 />
-                <p className="mt-1 text-sm text-gray-500">
+                <p className="mt-1 text-sm text-muted">
                   L'email ne peut pas être modifié
                 </p>
               </div>
@@ -317,10 +321,10 @@ export const Profile = () => {
               </div>
 
               {/* Section Géolocalisation */}
-              <div className="border-t pt-6">
+              <div className="border-t border-neutral-200 pt-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900 flex items-center">
-                    <MapPin className="h-5 w-5 mr-2" />
+                  <h3 className="text-heading text-lg font-medium flex items-center">
+                    <MapPin className="h-5 w-5 mr-2 text-brand-600" />
                     Localisation
                   </h3>
                   {isEditing && (
@@ -415,8 +419,8 @@ export const Profile = () => {
                   }`}
                 />
               </div>
-            </div>
-          </div>
+          </CardContent>
+        </Card>
 
           {/* Sécurité */}
           <div className="bg-white rounded-lg shadow-md">

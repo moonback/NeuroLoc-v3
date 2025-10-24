@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
+import { Card, CardContent } from './Card';
 
 interface QRCodeGeneratorProps {
   value: string;
@@ -28,11 +29,15 @@ export const QRCodeGenerator = ({ value, size = 200, className = '', dataHandove
   }, [value, size]);
 
   return (
-    <div className={`flex justify-center ${className}`}>
-      <canvas 
-        ref={canvasRef} 
-        data-handover-id={dataHandoverId}
-      />
-    </div>
+    <Card className={`${className}`}>
+      <CardContent className="p-4">
+        <div className="flex justify-center">
+          <canvas 
+            ref={canvasRef} 
+            data-handover-id={dataHandoverId}
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 };

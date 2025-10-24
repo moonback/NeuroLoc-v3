@@ -1,5 +1,8 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { BrowserMultiFormatReader } from '@zxing/library';
+import { Card, CardContent } from './Card';
+import { Button } from './Button';
+import { CheckCircle, Camera, AlertCircle } from 'lucide-react';
 
 interface QRCodeScannerProps {
   onScan: (result: string) => void;
@@ -85,37 +88,45 @@ export const QRCodeScanner = ({ onScan, onError, className = '', isActive = true
   }, [resetScanner]);
 
   return (
-    <div className={`relative ${className}`}>
-      <video
-        ref={videoRef}
-        className="w-full h-full rounded-lg"
-        style={{ maxHeight: '400px' }}
-      />
-      
-      {hasScanned ? (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="bg-green-500 bg-opacity-90 rounded-lg p-4 text-white text-center">
-            <div className="text-2xl mb-2">✅</div>
-            <p className="text-sm font-medium">QR Code scanné !</p>
+    <Card className={`relative ${className}`}>
+      <CardContent className="p-0">
+        <video
+          ref={videoRef}
+          className="w-full h-full rounded-lg"
+          style={{ maxHeight: '400px' }}
+        />
+        
+        {hasScanned ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Card className="border-success-200 bg-success-50">
+              <CardContent className="p-4 text-center">
+                <CheckCircle className="h-8 w-8 text-success-500 mx-auto mb-2" />
+                <p className="text-sm font-medium text-success-700">QR Code scanné !</p>
+              </CardContent>
+            </Card>
           </div>
-        </div>
-      ) : isScanning ? (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="bg-black bg-opacity-50 rounded-lg p-4 text-white text-center">
-            <div className="animate-pulse mb-2">📷</div>
-            <p className="text-sm">Pointez la caméra vers le QR code</p>
+        ) : isScanning ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Card className="border-neutral-200 bg-neutral-900 bg-opacity-50">
+              <CardContent className="p-4 text-center">
+                <Camera className="h-8 w-8 text-white mx-auto mb-2 animate-pulse" />
+                <p className="text-sm text-white">Pointez la caméra vers le QR code</p>
+              </CardContent>
+            </Card>
           </div>
-        </div>
-      ) : null}
+        ) : null}
 
-      {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-red-100 rounded-lg">
-          <div className="text-red-600 text-center">
-            <div className="text-2xl mb-2">⚠️</div>
-            <p className="text-sm">{error}</p>
+        {error && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Card className="border-accent-200 bg-accent-50">
+              <CardContent className="p-4 text-center">
+                <AlertCircle className="h-8 w-8 text-accent-500 mx-auto mb-2" />
+                <p className="text-sm text-accent-700">{error}</p>
+              </CardContent>
+            </Card>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };

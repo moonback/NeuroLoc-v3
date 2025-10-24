@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { authService } from '../services/auth.service';
 import { Input } from '../components/common/Input';
 import { Button } from '../components/common/Button';
+import { Card, CardContent, CardHeader } from '../components/common/Card';
 import { RoleSelector } from '../components/common/RoleSelector';
 import { Package } from 'lucide-react';
 import { UserRole } from '../types';
@@ -67,77 +68,81 @@ export const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-gray-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-neutral-50 flex items-center justify-center px-4 py-12">
       <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <div className="flex flex-col items-center mb-8">
-            <div className="bg-blue-600 p-3 rounded-full mb-4">
-              <Package className="h-10 w-10 text-white" />
+        <Card className="shadow-large">
+          <CardHeader className="text-center pb-8">
+            <div className="flex flex-col items-center">
+              <div className="w-16 h-16 bg-brand-500 rounded-2xl flex items-center justify-center mb-6">
+                <Package className="h-8 w-8 text-white" />
+              </div>
+              <h1 className="text-heading text-3xl font-bold">Inscription</h1>
+              <p className="text-body mt-2">Créez votre compte NeuroLoc</p>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900">Inscription</h1>
-            <p className="text-gray-600 mt-2">Créez votre compte NeuroLoc</p>
-          </div>
+          </CardHeader>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <Input
-              label="Nom complet"
-              type="text"
-              placeholder="Jean Dupont"
-              value={formData.full_name}
-              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-              error={errors.full_name}
-              required
-            />
+          <CardContent>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <Input
+                label="Nom complet"
+                type="text"
+                placeholder="Jean Dupont"
+                value={formData.full_name}
+                onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+                error={errors.full_name}
+                required
+              />
 
-            <Input
-              label="Email"
-              type="email"
-              placeholder="votre@email.com"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              error={errors.email}
-              required
-            />
+              <Input
+                label="Email"
+                type="email"
+                placeholder="votre@email.com"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                error={errors.email}
+                required
+              />
 
-            <Input
-              label="Mot de passe"
-              type="password"
-              placeholder="••••••••"
-              value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              error={errors.password}
-              required
-            />
+              <Input
+                label="Mot de passe"
+                type="password"
+                placeholder="••••••••"
+                value={formData.password}
+                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                error={errors.password}
+                required
+              />
 
-            <Input
-              label="Confirmer le mot de passe"
-              type="password"
-              placeholder="••••••••"
-              value={formData.confirmPassword}
-              onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
-              error={errors.confirmPassword}
-              required
-            />
+              <Input
+                label="Confirmer le mot de passe"
+                type="password"
+                placeholder="••••••••"
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                error={errors.confirmPassword}
+                required
+              />
 
-            <RoleSelector
-              selectedRole={formData.role}
-              onRoleChange={(role) => setFormData({ ...formData, role })}
-            />
+              <RoleSelector
+                selectedRole={formData.role}
+                onRoleChange={(role) => setFormData({ ...formData, role })}
+              />
 
-            <Button type="submit" className="w-full" isLoading={isLoading}>
-              S'inscrire
-            </Button>
-          </form>
+              <Button type="submit" className="w-full" isLoading={isLoading}>
+                S'inscrire
+              </Button>
+            </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-gray-600">
-              Déjà un compte ?{' '}
-              <Link to="/login" className="text-blue-600 hover:text-blue-700 font-medium">
-                Se connecter
-              </Link>
-            </p>
-          </div>
-        </div>
+            <div className="mt-8 text-center">
+              <p className="text-body">
+                Déjà un compte ?{' '}
+                <Link to="/login" className="text-brand-600 hover:text-brand-700 font-medium">
+                  Se connecter
+                </Link>
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

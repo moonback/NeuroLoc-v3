@@ -24,13 +24,13 @@ export const RoleBadge = ({ role, showIcon = true, size = 'md', className = '' }
   const getRoleColor = (role: UserRole): string => {
     switch (role) {
       case 'client':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-brand-100 text-brand-800';
       case 'loueur':
-        return 'bg-green-100 text-green-800';
+        return 'bg-success-100 text-success-800';
       case 'admin':
         return 'bg-purple-100 text-purple-800';
       default:
-        return 'bg-gray-100 text-gray-800';
+        return 'bg-neutral-100 text-neutral-800';
     }
   };
 

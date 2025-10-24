@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef, FormEvent } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { useMessages } from '../../hooks/useMessages';
-import { Send } from 'lucide-react';
+import { Send, MessageCircle } from 'lucide-react';
 import { Button } from '../common/Button';
 import { Loader } from '../common/Loader';
+import { Card, CardContent, CardHeader } from '../common/Card';
+import { Input } from '../common/Input';
 
 interface ChatBoxProps {
   conversationId: string;
@@ -43,18 +45,31 @@ export const ChatBox = ({ conversationId, receiverId, objectId }: ChatBoxProps) 
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-64">
-        <Loader />
-      </div>
+      <Card className="h-[600px]">
+        <CardContent className="flex justify-center items-center h-full">
+          <Loader size="lg" />
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <div className="flex flex-col h-[600px] bg-white rounded-lg shadow-lg">
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+    <Card className="h-[600px] flex flex-col">
+      <CardHeader className="border-b border-neutral-200">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center">
+            <MessageCircle className="h-4 w-4 text-brand-600" />
+          </div>
+          <h3 className="text-heading text-lg font-semibold">Messages</h3>
+        </div>
+      </CardHeader>
+
+      <CardContent className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
-          <div className="text-center text-gray-500 mt-8">
-            Aucun message. Commencez la conversation !
+          <div className="text-center text-muted mt-12">
+            <MessageCircle className="h-12 w-12 mx-auto mb-4 text-neutral-300" />
+            <p className="text-lg font-medium mb-2">Aucun message</p>
+            <p className="text-sm">Commencez la conversation !</p>
           </div>
         ) : (
           messages.map((message) => {
@@ -65,16 +80,16 @@ export const ChatBox = ({ conversationId, receiverId, objectId }: ChatBoxProps) 
                 className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                  className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl ${
                     isOwnMessage
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-200 text-gray-900'
+                      ? 'bg-brand-500 text-white'
+                      : 'bg-neutral-100 text-neutral-900'
                   }`}
                 >
-                  <p className="text-sm">{message.content}</p>
+                  <p className="text-sm leading-relaxed">{message.content}</p>
                   <p
-                    className={`text-xs mt-1 ${
-                      isOwnMessage ? 'text-blue-100' : 'text-gray-500'
+                    className={`text-xs mt-2 ${
+                      isOwnMessage ? 'text-brand-100' : 'text-neutral-500'
                     }`}
                   >
                     {new Date(message.created_at).toLocaleTimeString('fr-FR', {
@@ -88,23 +103,30 @@ export const ChatBox = ({ conversationId, receiverId, objectId }: ChatBoxProps) 
           })
         )}
         <div ref={messagesEndRef} />
-      </div>
+      </CardContent>
 
-      <form onSubmit={handleSendMessage} className="border-t p-4">
-        <div className="flex space-x-2">
-          <input
-            type="text"
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            placeholder="Tapez votre message..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            disabled={isSending}
-          />
-          <Button type="submit" isLoading={isSending} disabled={!newMessage.trim()}>
-            <Send className="h-5 w-5" />
-          </Button>
-        </div>
-      </form>
-    </div>
+      <div className="border-t border-neutral-200 p-4">
+        <form onSubmit={handleSendMessage}>
+          <div className="flex gap-3">
+            <Input
+              type="text"
+              placeholder="Tapez votre message..."
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              disabled={isSending}
+              className="flex-1"
+            />
+            <Button 
+              type="submit" 
+              isLoading={isSending} 
+              disabled={!newMessage.trim()}
+              leftIcon={<Send className="h-4 w-4" />}
+            >
+              Envoyer
+            </Button>
+          </div>
+        </form>
+      </div>
+    </Card>
   );
 };

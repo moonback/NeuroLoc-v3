@@ -1,132 +1,150 @@
-# Architecture NeuroLoc
+# 🏗️ Architecture NeuroLoc
 
-## Vue d'ensemble
+## Vue d'Ensemble
 
-NeuroLoc suit une architecture moderne de type **JAMstack** (JavaScript, APIs, Markup) avec une séparation claire entre le frontend et le backend. L'application utilise Supabase comme Backend-as-a-Service, ce qui simplifie considérablement l'infrastructure tout en offrant des performances et une sécurité de niveau entreprise.
+NeuroLoc est une application web moderne construite avec une architecture full-stack utilisant React pour le frontend et Supabase comme Backend-as-a-Service. L'application suit les principes d'architecture moderne avec une séparation claire des responsabilités.
 
-## Diagramme d'architecture
+## 🎯 Architecture Générale
 
 ```mermaid
 graph TB
     subgraph "Frontend (React + TypeScript)"
-        A[Pages React] --> B[Composants]
-        B --> C[Hooks personnalisés]
-        C --> D[Services API]
-        D --> E[Client Supabase]
+        A[Pages] --> B[Composants]
+        B --> C[Hooks]
+        C --> D[Services]
+        D --> E[Types]
     end
     
     subgraph "Backend (Supabase)"
         F[Auth] --> G[Database PostgreSQL]
         G --> H[Storage]
-        G --> I[Realtime]
-        J[Edge Functions] --> K[Stripe API]
+        H --> I[Edge Functions]
     end
     
-    subgraph "Services externes"
-        L[Stripe] --> M[Paiements]
-        N[Géolocalisation] --> O[Coordonnées GPS]
+    subgraph "Services Externes"
+        J[Stripe] --> K[Paiements]
+        L[Google Maps] --> M[Géolocalisation]
     end
     
-    E --> F
-    E --> G
-    E --> H
-    E --> I
-    J --> L
-    D --> N
+    D --> F
+    I --> J
+    D --> L
+    
+    style A fill:#e1f5fe
+    style F fill:#f3e5f5
+    style J fill:#fff3e0
 ```
 
-## Architecture Frontend
+## 🎨 Frontend Architecture
 
-### Structure des composants
+### Structure des Composants
 
 ```
 src/
-├── components/           # Composants réutilisables
-│   ├── common/          # Composants de base (Button, Input, Loader)
-│   ├── layout/          # Composants de mise en page (Navbar, Footer)
-│   ├── objects/         # Composants spécifiques aux objets
-│   ├── profile/         # Composants de profil utilisateur
-│   └── chat/            # Composants de messagerie
-├── pages/               # Pages principales de l'application
-├── hooks/               # Hooks React personnalisés
-├── services/            # Couche d'abstraction pour les APIs
-├── types/               # Définitions TypeScript
-└── utils/               # Fonctions utilitaires
+├── components/
+│   ├── common/           # Composants réutilisables
+│   │   ├── Button.tsx    # Bouton avec variants
+│   │   ├── Input.tsx     # Champ de saisie
+│   │   ├── Card.tsx      # Conteneur de carte
+│   │   ├── Badge.tsx     # Badge de statut
+│   │   ├── Avatar.tsx    # Avatar utilisateur
+│   │   └── Loader.tsx    # Indicateur de chargement
+│   ├── layout/           # Composants de mise en page
+│   │   ├── Navbar.tsx    # Barre de navigation
+│   │   └── Footer.tsx    # Pied de page
+│   ├── objects/          # Composants liés aux objets
+│   │   ├── ObjectCard.tsx    # Carte d'objet
+│   │   ├── ObjectForm.tsx    # Formulaire d'objet
+│   │   └── ImageUpload.tsx   # Upload d'images
+│   ├── profile/          # Composants de profil
+│   │   ├── ProfileCard.tsx   # Carte de profil
+│   │   ├── RoleStats.tsx     # Statistiques de rôle
+│   │   └── ReviewsList.tsx   # Liste d'avis
+│   ├── chat/             # Composants de messagerie
+│   │   └── ChatBox.tsx   # Boîte de chat
+│   ├── handovers/        # Composants de remise
+│   │   ├── HandoverCard.tsx      # Carte de remise
+│   │   ├── QRCodeDisplay.tsx     # Affichage QR code
+│   │   └── QRCodeScanner.tsx     # Scanner QR code
+│   └── payment/          # Composants de paiement
+│       └── PaymentStatus.tsx # Statut de paiement
+├── pages/                # Pages de l'application
+├── hooks/                # Hooks personnalisés
+├── services/             # Services API
+├── types/                # Définitions TypeScript
+└── utils/                # Utilitaires
 ```
 
-### Patterns architecturaux
+### Patterns Architecturaux
 
-#### 1. **Composition de composants**
-- Composants fonctionnels avec hooks
-- Séparation des responsabilités (UI vs logique métier)
-- Props typées avec TypeScript
+#### 1. **Composants Fonctionnels avec Hooks**
+```typescript
+// Exemple de composant moderne
+export const ObjectCard: React.FC<ObjectCardProps> = ({ object }) => {
+  const { user } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const handleReserve = useCallback(async () => {
+    // Logique de réservation
+  }, [object.id]);
+  
+  return (
+    <Card className="card-hover">
+      {/* Contenu du composant */}
+    </Card>
+  );
+};
+```
 
-#### 2. **Gestion d'état**
-- État local avec `useState` et `useReducer`
-- État global via hooks personnalisés (`useAuth`, `useObjects`)
-- Synchronisation temps réel avec Supabase Realtime
+#### 2. **Hooks Personnalisés pour la Logique Métier**
+```typescript
+// Exemple de hook personnalisé
+export const useObjects = () => {
+  const [objects, setObjects] = useState<RentalObject[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  const fetchObjects = useCallback(async () => {
+    // Logique de récupération des objets
+  }, []);
+  
+  return { objects, loading, fetchObjects };
+};
+```
 
-#### 3. **Services layer**
-- Abstraction des appels API dans des services dédiés
-- Gestion centralisée des erreurs
-- Types TypeScript pour toutes les interfaces
+#### 3. **Services pour les Appels API**
+```typescript
+// Exemple de service
+export const objectsService = {
+  async getObjects(): Promise<RentalObject[]> {
+    const { data, error } = await supabase
+      .from('objects')
+      .select('*, owner:profiles(*)');
+    
+    if (error) throw error;
+    return data || [];
+  }
+};
+```
 
-#### 4. **Routing**
-- React Router v6 avec routes protégées
-- Lazy loading des composants
-- Navigation programmatique
+## 🗄️ Backend Architecture (Supabase)
 
-## Architecture Backend
+### Base de Données PostgreSQL
 
-### Supabase comme Backend-as-a-Service
-
-#### 1. **Authentification**
-- Supabase Auth avec JWT
-- Gestion automatique des sessions
-- Row Level Security (RLS) pour la sécurité
-
-#### 2. **Base de données PostgreSQL**
-- Schéma relationnel optimisé
-- Fonctions SQL personnalisées
-- Triggers pour l'automatisation
-- Index pour les performances
-
-#### 3. **Storage**
-- Buckets organisés (`profiles`, `objects`)
-- Upload sécurisé avec validation
-- URLs publiques pour les images
-
-#### 4. **Realtime**
-- WebSockets pour la messagerie
-- Subscriptions aux changements de données
-- Notifications en temps réel
-
-#### 5. **Edge Functions**
-- Serverless functions en Deno
-- Intégration Stripe
-- Webhooks de paiement
-
-## Base de données
-
-### Schéma relationnel
+#### Tables Principales
 
 ```mermaid
 erDiagram
-    PROFILES ||--o{ OBJECTS : owns
-    PROFILES ||--o{ RESERVATIONS : rents
-    PROFILES ||--o{ RESERVATIONS : owns
-    PROFILES ||--o{ MESSAGES : sends
-    PROFILES ||--o{ MESSAGES : receives
-    PROFILES ||--o{ REVIEWS : writes
-    PROFILES ||--o{ REVIEWS : receives
+    profiles ||--o{ objects : owns
+    profiles ||--o{ reservations : rents
+    profiles ||--o{ reservations : receives
+    objects ||--o{ reservations : "is reserved"
+    reservations ||--o{ messages : "has messages"
+    reservations ||--o{ reviews : "has reviews"
+    reservations ||--o{ handovers : "has handovers"
     
-    OBJECTS ||--o{ RESERVATIONS : has
-    OBJECTS ||--o{ MESSAGES : references
-    RESERVATIONS ||--o{ REVIEWS : generates
-    
-    PROFILES {
+    profiles {
         uuid id PK
-        text email UK
+        text email
         text full_name
         text avatar_url
         text phone
@@ -137,11 +155,13 @@ erDiagram
         text country
         decimal latitude
         decimal longitude
-        timestamptz created_at
-        timestamptz updated_at
+        text role
+        boolean is_verified
+        timestamp created_at
+        timestamp updated_at
     }
     
-    OBJECTS {
+    objects {
         uuid id PK
         uuid owner_id FK
         text title
@@ -153,11 +173,11 @@ erDiagram
         decimal latitude
         decimal longitude
         text status
-        timestamptz created_at
-        timestamptz updated_at
+        timestamp created_at
+        timestamp updated_at
     }
     
-    RESERVATIONS {
+    reservations {
         uuid id PK
         uuid object_id FK
         uuid renter_id FK
@@ -167,128 +187,220 @@ erDiagram
         decimal total_price
         text status
         text stripe_payment_intent
-        timestamptz created_at
-        timestamptz updated_at
+        timestamp created_at
+        timestamp updated_at
     }
     
-    MESSAGES {
+    messages {
         uuid id PK
-        uuid conversation_id
+        text conversation_id
         uuid sender_id FK
         uuid receiver_id FK
         uuid object_id FK
         text content
         boolean read
-        timestamptz created_at
+        timestamp created_at
     }
     
-    REVIEWS {
+    reviews {
         uuid id PK
         uuid reservation_id FK
         uuid reviewer_id FK
         uuid reviewed_id FK
         integer rating
         text comment
-        timestamptz created_at
+        timestamp created_at
+    }
+    
+    handovers {
+        uuid id PK
+        uuid reservation_id FK
+        text type
+        text status
+        text qr_code
+        text pickup_address
+        decimal pickup_latitude
+        decimal pickup_longitude
+        timestamp scheduled_date
+        timestamp actual_date
+        text notes
+        timestamp created_at
+        timestamp updated_at
     }
 ```
 
-### Fonctionnalités avancées
+### Sécurité (Row Level Security)
 
-#### 1. **Géolocalisation**
-- Fonctions SQL pour calculer les distances
-- Index géographiques pour les requêtes spatiales
-- Validation des coordonnées GPS
+```sql
+-- Exemple de politique RLS
+CREATE POLICY "Users can view their own profile" ON profiles
+FOR SELECT USING (auth.uid() = id);
 
-#### 2. **Sécurité**
-- Row Level Security sur toutes les tables
-- Policies granulaires par utilisateur
-- Validation des données côté serveur
+CREATE POLICY "Users can update their own profile" ON profiles
+FOR UPDATE USING (auth.uid() = id);
+```
 
-#### 3. **Performance**
-- Index optimisés pour les requêtes fréquentes
-- Triggers pour la mise à jour automatique
-- Fonctions SQL réutilisables
+### Storage (Images)
 
-## Intégrations externes
+- **Bucket** : `object-images`
+- **Politique** : Upload autorisé pour utilisateurs authentifiés
+- **Format** : Images optimisées et compressées
 
-### Stripe
-- **Checkout Sessions** pour les paiements
-- **Webhooks** pour la confirmation des paiements
-- **Métadonnées** pour lier les paiements aux réservations
+## ⚡ Edge Functions (Deno)
 
-### Géolocalisation
-- **API de géocodage** pour convertir les adresses en coordonnées
-- **Calcul de distances** pour la recherche proximité
-- **Validation des coordonnées** GPS
+### Fonctions Disponibles
 
-## Sécurité
+#### 1. **create-checkout**
+```typescript
+// Création d'une session de paiement Stripe
+export default async function handler(req: Request) {
+  const { reservation_id, amount } = await req.json();
+  
+  const session = await stripe.checkout.sessions.create({
+    // Configuration Stripe
+  });
+  
+  return new Response(JSON.stringify({ sessionId: session.id }));
+}
+```
 
-### Frontend
-- Validation des formulaires côté client
-- Sanitisation des entrées utilisateur
-- Gestion sécurisée des tokens d'authentification
+#### 2. **stripe-webhook**
+```typescript
+// Gestion des webhooks Stripe
+export default async function handler(req: Request) {
+  const sig = req.headers.get('stripe-signature');
+  const event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+  
+  switch (event.type) {
+    case 'payment_intent.succeeded':
+      // Mise à jour du statut de réservation
+      break;
+  }
+}
+```
 
-### Backend
-- Row Level Security (RLS) sur toutes les tables
-- Policies restrictives basées sur l'utilisateur
-- Validation des données côté serveur
-- Upload sécurisé des fichiers
+## 🔄 Flux de Données
 
-### Paiements
-- Aucune donnée bancaire stockée
-- Tokens Stripe pour les paiements
-- Webhooks pour la confirmation
-- Chiffrement des communications
+### 1. **Authentification**
+```mermaid
+sequenceDiagram
+    participant U as Utilisateur
+    participant F as Frontend
+    participant S as Supabase Auth
+    participant D as Database
+    
+    U->>F: Connexion
+    F->>S: signInWithPassword
+    S->>D: Vérification credentials
+    D->>S: Profil utilisateur
+    S->>F: Session + Token
+    F->>U: Redirection Dashboard
+```
 
-## Performance
+### 2. **Création de Réservation**
+```mermaid
+sequenceDiagram
+    participant U as Utilisateur
+    participant F as Frontend
+    participant S as Supabase
+    participant ST as Stripe
+    participant EF as Edge Function
+    
+    U->>F: Créer réservation
+    F->>S: Insert reservation (pending)
+    F->>EF: create-checkout
+    EF->>ST: Créer session paiement
+    ST->>EF: Session ID
+    EF->>F: Redirection Stripe
+    F->>U: Page de paiement
+    U->>ST: Paiement
+    ST->>EF: Webhook payment_intent.succeeded
+    EF->>S: Update reservation (confirmed)
+```
 
-### Frontend
-- **Code splitting** avec React.lazy
-- **Memoization** avec useMemo et useCallback
-- **Optimistic updates** pour l'UX
-- **Lazy loading** des images
+### 3. **Système de Remise QR Code**
+```mermaid
+sequenceDiagram
+    participant O as Propriétaire
+    participant R as Locataire
+    participant F as Frontend
+    participant S as Supabase
+    participant QR as QR Scanner
+    
+    O->>F: Créer handover
+    F->>S: Insert handover + QR code
+    S->>F: QR code généré
+    F->>O: Affichage QR code
+    
+    R->>QR: Scanner QR code
+    QR->>F: Code scanné
+    F->>S: Update handover status
+    S->>F: Confirmation
+    F->>R: Statut mis à jour
+```
 
-### Backend
-- **Index de base de données** optimisés
-- **Pagination** pour les grandes listes
-- **Cache** des requêtes fréquentes
-- **CDN** pour les images via Supabase Storage
+## 🎨 Design System
 
-## Monitoring et logs
+### Palette de Couleurs
+```css
+/* Couleurs principales */
+--brand-50: #eff6ff;
+--brand-500: #3b82f6;
+--brand-900: #1e3a8a;
 
-### Frontend
-- Gestion des erreurs avec try/catch
-- Logs de débogage en développement
-- Toast notifications pour le feedback utilisateur
+--neutral-50: #f9fafb;
+--neutral-500: #6b7280;
+--neutral-900: #111827;
 
-### Backend
-- Logs automatiques Supabase
-- Monitoring des Edge Functions
-- Alertes Stripe pour les paiements
+--success-500: #10b981;
+--accent-500: #ef4444;
+```
 
-## Évolutivité
+### Composants de Base
+- **Button** : Variants (primary, secondary, ghost, danger)
+- **Input** : Avec validation et icônes
+- **Card** : Conteneur avec ombres et bordures
+- **Badge** : Indicateurs de statut
+- **Avatar** : Images de profil avec fallback
 
-### Horizontal
-- Supabase gère automatiquement la montée en charge
-- Edge Functions serverless
-- CDN global pour les assets
+## 🔧 Configuration et Déploiement
 
-### Vertical
-- Optimisation des requêtes SQL
-- Cache intelligent
-- Compression des données
+### Variables d'Environnement
+```env
+# Supabase
+VITE_SUPABASE_URL=https://xxx.supabase.co
+VITE_SUPABASE_ANON_KEY=eyJ...
 
-## Déploiement
+# Stripe
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...
+STRIPE_SECRET_KEY=sk_test_...
 
-### Frontend
-- Build statique optimisé
-- Déploiement sur Vercel/Netlify
-- Variables d'environnement sécurisées
+# Optionnel
+VITE_GOOGLE_MAPS_API_KEY=AIza...
+```
 
-### Backend
-- Infrastructure gérée par Supabase
-- Migrations automatiques
-- Rollback en cas de problème
+### Build et Déploiement
+```bash
+# Build de production
+npm run build
 
-Cette architecture garantit une application performante, sécurisée et évolutive, tout en maintenant une complexité de développement raisonnable grâce à l'utilisation de Supabase comme Backend-as-a-Service.
+# Déploiement Vercel/Netlify
+# Les fichiers dans dist/ sont prêts pour le déploiement
+```
+
+## 📊 Monitoring et Performance
+
+### Métriques Clés
+- **Temps de chargement** : < 2s pour les pages principales
+- **Taille du bundle** : Optimisé avec Vite
+- **Accessibilité** : WCAG 2.1 AA
+- **SEO** : Meta tags et structure sémantique
+
+### Outils de Monitoring
+- **Supabase Dashboard** : Monitoring de la DB et des Edge Functions
+- **Stripe Dashboard** : Suivi des paiements
+- **Vercel Analytics** : Métriques de performance (si déployé sur Vercel)
+
+---
+
+Cette architecture garantit une application scalable, maintenable et performante, prête pour la croissance future de NeuroLoc.

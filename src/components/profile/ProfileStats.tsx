@@ -1,4 +1,5 @@
 import { Package, Calendar, Star, Euro, TrendingUp } from 'lucide-react';
+import { Card, CardContent } from '../common/Card';
 
 interface ProfileStatsProps {
   stats: {
@@ -17,15 +18,15 @@ export const ProfileStats = ({ stats, className = '' }: ProfileStatsProps) => {
       icon: Package,
       label: 'Objets publiés',
       value: stats.totalObjects || 0,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
+      color: 'text-brand-600',
+      bgColor: 'bg-brand-100'
     },
     {
       icon: Calendar,
       label: 'Réservations',
       value: stats.totalReservations || 0,
-      color: 'text-green-600',
-      bgColor: 'bg-green-100'
+      color: 'text-success-600',
+      bgColor: 'bg-success-100'
     },
     {
       icon: Star,
@@ -53,21 +54,23 @@ export const ProfileStats = ({ stats, className = '' }: ProfileStatsProps) => {
   return (
     <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 ${className}`}>
       {statItems.map((item, index) => (
-        <div key={index} className="bg-white rounded-lg p-4 shadow-sm border">
-          <div className="flex items-center">
-            <div className={`${item.bgColor} rounded-full p-3 mr-3`}>
-              <item.icon className={`h-6 w-6 ${item.color}`} />
-            </div>
-            <div>
-              <div className={`text-2xl font-bold ${item.color}`}>
-                {item.value}
+        <Card key={index} className="shadow-soft">
+          <CardContent className="p-4">
+            <div className="flex items-center">
+              <div className={`${item.bgColor} rounded-full p-3 mr-3`}>
+                <item.icon className={`h-6 w-6 ${item.color}`} />
               </div>
-              <div className="text-sm text-gray-600">
-                {item.label}
+              <div>
+                <div className={`text-2xl font-bold ${item.color}`}>
+                  {item.value}
+                </div>
+                <div className="text-sm text-body">
+                  {item.label}
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </CardContent>
+        </Card>
       ))}
     </div>
   );
