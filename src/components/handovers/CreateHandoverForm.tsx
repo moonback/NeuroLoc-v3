@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
-import { MapPin, Calendar, FileText, Plus } from 'lucide-react';
+import { MapPin, Calendar, FileText, Plus, X } from 'lucide-react';
 import { CreateHandoverInput, HandoverType, Reservation } from '../../types';
 import { handoversService } from '../../services/handovers.service';
 import { reservationsService } from '../../services/reservations.service';
+import { Card, CardContent, CardHeader } from '../common/Card';
+import { Button } from '../common/Button';
+import { Input } from '../common/Input';
+import { Loader } from '../common/Loader';
 import toast from 'react-hot-toast';
 
 interface CreateHandoverFormProps {
@@ -94,188 +98,198 @@ export const CreateHandoverForm = ({ reservationId, onHandoverCreated }: CreateH
 
   if (!isOpen) {
     return (
-      <button
+      <Button
         onClick={() => setIsOpen(true)}
-        className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+        variant="primary"
+        leftIcon={<Plus className="h-4 w-4" />}
       >
-        <Plus className="h-4 w-4" />
-        <span>Créer un handover</span>
-      </button>
+        Créer un handover
+      </Button>
     );
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
-      <h3 className="text-lg font-semibold mb-4">Créer un Handover</h3>
-      
-      {/* Informations de la réservation */}
-      {reservation && (
-        <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <h4 className="font-medium text-gray-900 mb-2">Informations de la réservation</h4>
-          <div className="space-y-1 text-sm text-gray-600">
-            <p><strong>Objet :</strong> {reservation.object?.title}</p>
-            <p><strong>Propriétaire :</strong> {reservation.owner?.full_name}</p>
-            <p><strong>Locataire :</strong> {reservation.renter?.full_name}</p>
-            <p><strong>Période :</strong> {new Date(reservation.start_date).toLocaleDateString('fr-FR')} - {new Date(reservation.end_date).toLocaleDateString('fr-FR')}</p>
-          </div>
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <h3 className="text-heading text-lg font-semibold">Créer un Handover</h3>
+          <Button
+            onClick={() => setIsOpen(false)}
+            variant="ghost"
+            size="sm"
+            leftIcon={<X className="h-4 w-4" />}
+          />
         </div>
-      )}
-      
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Type de handover */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Type de handover
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              type="button"
-              onClick={() => handleInputChange('type', 'pickup')}
-              className={`p-3 rounded-lg border-2 transition ${
-                formData.type === 'pickup'
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <div className="text-center">
-                <MapPin className="h-6 w-6 mx-auto mb-1" />
-                <span className="text-sm font-medium">Retrait</span>
-              </div>
-            </button>
-            
-            <button
-              type="button"
-              onClick={() => handleInputChange('type', 'return')}
-              className={`p-3 rounded-lg border-2 transition ${
-                formData.type === 'return'
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 hover:border-gray-300'
-              }`}
-            >
-              <div className="text-center">
-                <MapPin className="h-6 w-6 mx-auto mb-1" />
-                <span className="text-sm font-medium">Restitution</span>
-              </div>
-            </button>
-          </div>
-        </div>
+      </CardHeader>
 
-        {/* Adresse de retrait */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Adresse de retrait *
-          </label>
-          {isLoadingReservation ? (
-            <div className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50">
-              <div className="animate-pulse flex items-center space-x-3">
-                <div className="h-4 w-4 bg-gray-300 rounded"></div>
-                <div className="h-4 bg-gray-300 rounded flex-1"></div>
+      <CardContent>
+        {/* Informations de la réservation */}
+        {reservation && (
+          <Card className="mb-6 bg-neutral-50">
+            <CardContent className="p-4">
+              <h4 className="text-heading font-medium mb-3">Informations de la réservation</h4>
+              <div className="space-y-2 text-sm text-body">
+                <p><strong>Objet :</strong> {reservation.object?.title}</p>
+                <p><strong>Propriétaire :</strong> {reservation.owner?.full_name}</p>
+                <p><strong>Locataire :</strong> {reservation.renter?.full_name}</p>
+                <p><strong>Période :</strong> {new Date(reservation.start_date).toLocaleDateString('fr-FR')} - {new Date(reservation.end_date).toLocaleDateString('fr-FR')}</p>
               </div>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {/* Affichage de l'adresse du propriétaire */}
-              {reservation?.owner?.address && (
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <MapPin className="h-4 w-4 text-blue-600" />
-                    <span className="text-sm font-medium text-blue-800">Adresse du propriétaire :</span>
-                  </div>
-                  <p className="text-sm text-blue-700">{reservation.owner.address}</p>
-                  {reservation.owner.city && (
-                    <p className="text-sm text-blue-600">{reservation.owner.city}, {reservation.owner.postal_code}</p>
-                  )}
+            </CardContent>
+          </Card>
+        )}
+        
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Type de handover */}
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-3">
+              Type de handover
+            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => handleInputChange('type', 'pickup')}
+                className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                  formData.type === 'pickup'
+                    ? 'border-brand-500 bg-brand-50 text-brand-700'
+                    : 'border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50'
+                }`}
+              >
+                <div className="text-center">
+                  <MapPin className="h-6 w-6 mx-auto mb-2" />
+                  <span className="text-sm font-medium">Retrait</span>
                 </div>
-              )}
+              </button>
               
-              {/* Champ d'adresse modifiable */}
-              <div className="relative">
-                <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                <input
+              <button
+                type="button"
+                onClick={() => handleInputChange('type', 'return')}
+                className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                  formData.type === 'return'
+                    ? 'border-brand-500 bg-brand-50 text-brand-700'
+                    : 'border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50'
+                }`}
+              >
+                <div className="text-center">
+                  <MapPin className="h-6 w-6 mx-auto mb-2" />
+                  <span className="text-sm font-medium">Restitution</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Adresse de retrait */}
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              Adresse de retrait *
+            </label>
+            {isLoadingReservation ? (
+              <div className="w-full p-3 border border-neutral-300 rounded-xl bg-neutral-50">
+                <div className="flex items-center gap-3">
+                  <Loader size="sm" />
+                  <div className="h-4 bg-neutral-300 rounded flex-1 animate-pulse"></div>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {/* Affichage de l'adresse du propriétaire */}
+                {reservation?.owner?.address && (
+                  <Card className="border-brand-200 bg-brand-50">
+                    <CardContent className="p-3">
+                      <div className="flex items-center gap-2 mb-2">
+                        <MapPin className="h-4 w-4 text-brand-600" />
+                        <span className="text-sm font-medium text-brand-800">Adresse du propriétaire :</span>
+                      </div>
+                      <p className="text-sm text-brand-700">{reservation.owner.address}</p>
+                      {reservation.owner.city && (
+                        <p className="text-sm text-brand-600">{reservation.owner.city}, {reservation.owner.postal_code}</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+                
+                {/* Champ d'adresse modifiable */}
+                <Input
                   type="text"
                   value={formData.pickup_address}
                   onChange={(e) => handleInputChange('pickup_address', e.target.value)}
                   placeholder="Adresse complète de retrait (modifiable si nécessaire)"
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  leftIcon={MapPin}
                   required
                 />
+                
+                {reservation?.owner?.address && formData.pickup_address !== reservation.owner.address && (
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      handleInputChange('pickup_address', reservation.owner?.address || '');
+                      if (reservation.owner?.latitude && reservation.owner?.longitude) {
+                        setFormData(prev => ({
+                          ...prev,
+                          pickup_latitude: reservation.owner?.latitude || undefined,
+                          pickup_longitude: reservation.owner?.longitude || undefined
+                        }));
+                      }
+                    }}
+                    variant="ghost"
+                    size="sm"
+                  >
+                    Utiliser l'adresse du propriétaire
+                  </Button>
+                )}
               </div>
-              
-              {reservation?.owner?.address && formData.pickup_address !== reservation.owner.address && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleInputChange('pickup_address', reservation.owner?.address || '');
-                    if (reservation.owner?.latitude && reservation.owner?.longitude) {
-                      setFormData(prev => ({
-                        ...prev,
-                        pickup_latitude: reservation.owner?.latitude || undefined,
-                        pickup_longitude: reservation.owner?.longitude || undefined
-                      }));
-                    }
-                  }}
-                  className="text-sm text-blue-600 hover:text-blue-800 underline"
-                >
-                  Utiliser l'adresse du propriétaire
-                </button>
-              )}
-            </div>
-          )}
-        </div>
+            )}
+          </div>
 
-        {/* Date prévue */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Date prévue *
-          </label>
-          <div className="relative">
-            <Calendar className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <input
+          {/* Date prévue */}
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              Date prévue *
+            </label>
+            <Input
               type="datetime-local"
               value={formData.scheduled_date}
               onChange={(e) => handleInputChange('scheduled_date', e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              leftIcon={Calendar}
               required
             />
           </div>
-        </div>
 
-        {/* Notes */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Notes (optionnel)
-          </label>
-          <div className="relative">
-            <FileText className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+          {/* Notes */}
+          <div>
+            <label className="block text-sm font-medium text-neutral-700 mb-2">
+              Notes (optionnel)
+            </label>
             <textarea
               value={formData.notes}
               onChange={(e) => handleInputChange('notes', e.target.value)}
               placeholder="Instructions spéciales, détails de contact..."
               rows={3}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+              className="input resize-none"
             />
           </div>
-        </div>
 
-        {/* Boutons d'action */}
-        <div className="flex space-x-3 pt-4">
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? 'Création...' : 'Créer le handover'}
-          </button>
-          
-          <button
-            type="button"
-            onClick={() => setIsOpen(false)}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-          >
-            Annuler
-          </button>
-        </div>
-      </form>
-    </div>
+          {/* Boutons d'action */}
+          <div className="flex gap-3 pt-4">
+            <Button
+              type="submit"
+              disabled={isLoading}
+              variant="primary"
+              isLoading={isLoading}
+              className="flex-1"
+            >
+              {isLoading ? 'Création...' : 'Créer le handover'}
+            </Button>
+            
+            <Button
+              type="button"
+              onClick={() => setIsOpen(false)}
+              variant="ghost"
+            >
+              Annuler
+            </Button>
+          </div>
+        </form>
+      </CardContent>
+    </Card>
   );
 };

@@ -4,6 +4,10 @@ import { useNavigate } from 'react-router-dom';
 import { handoversService } from '../services/handovers.service';
 import { Handover } from '../types';
 import { QRCodeScanner } from '../components/common/QRCodeScanner';
+import { Card, CardContent, CardHeader } from '../components/common/Card';
+import { Button } from '../components/common/Button';
+import { Badge } from '../components/common/Badge';
+import { Loader } from '../components/common/Loader';
 import toast from 'react-hot-toast';
 
 export const QRCodeScannerPage = () => {
@@ -99,197 +103,230 @@ export const QRCodeScannerPage = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'pending': return 'text-yellow-600 bg-yellow-100';
-      case 'picked_up': return 'text-blue-600 bg-blue-100';
-      case 'returned': return 'text-green-600 bg-green-100';
-      case 'cancelled': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
+  const getStatusBadge = (status: string) => {
+    const variants = {
+      pending: 'warning' as const,
+      picked_up: 'brand' as const,
+      returned: 'success' as const,
+      cancelled: 'danger' as const
+    };
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'pending': return 'En attente';
-      case 'picked_up': return 'Récupéré';
-      case 'returned': return 'Restitué';
-      case 'cancelled': return 'Annulé';
-      default: return 'Inconnu';
-    }
+    const labels = {
+      pending: 'En attente',
+      picked_up: 'Récupéré',
+      returned: 'Restitué',
+      cancelled: 'Annulé'
+    };
+
+    return (
+      <Badge variant={variants[status as keyof typeof variants]}>
+        {labels[status as keyof typeof labels]}
+      </Badge>
+    );
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-neutral-50 py-8">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* En-tête */}
         <div className="mb-8">
-          <button
+          <Button
             onClick={() => navigate('/dashboard')}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-800 transition mb-4"
+            variant="ghost"
+            leftIcon={<ArrowLeft className="h-5 w-5" />}
+            className="mb-4"
           >
-            <ArrowLeft className="h-5 w-5" />
-            <span>Retour au dashboard</span>
-          </button>
+            Retour au dashboard
+          </Button>
           
-          <div className="flex items-center space-x-3">
-            <ScanLine className="h-8 w-8 text-blue-600" />
-            <h1 className="text-3xl font-bold text-gray-900">Scanner QR Code</h1>
+          <div className="flex items-center gap-3">
+            <ScanLine className="h-8 w-8 text-brand-600" />
+            <h1 className="text-heading text-3xl font-bold">Scanner QR Code</h1>
           </div>
-          <p className="text-gray-600 mt-2">
+          <p className="text-body mt-2">
             Scannez le QR code pour gérer le retrait ou la restitution d'un objet
           </p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Scanner */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center space-x-2">
-              <Camera className="h-5 w-5" />
-              <span>Scanner QR Code</span>
-            </h2>
+          <Card>
+            <CardHeader>
+              <h2 className="text-heading text-xl font-semibold flex items-center gap-2">
+                <Camera className="h-5 w-5" />
+                <span>Scanner QR Code</span>
+              </h2>
+            </CardHeader>
             
-            {!handover ? (
-              <div className="space-y-4">
-                {cameraError ? (
-                  <div className="text-center py-8">
-                    <CameraOff className="h-16 w-16 text-red-400 mx-auto mb-4" />
-                    <p className="text-red-600 mb-4">{cameraError}</p>
-                <button
+            <CardContent>
+              {!handover ? (
+                <div className="space-y-4">
+                  {cameraError ? (
+                    <Card className="text-center py-8">
+                      <CardContent>
+                        <CameraOff className="h-16 w-16 text-accent-400 mx-auto mb-4" />
+                        <p className="text-accent-600 mb-4">{cameraError}</p>
+                        <Button
+                          onClick={resetScanner}
+                          variant="primary"
+                        >
+                          Réessayer
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ) : (
+                    <div className="space-y-4">
+                      <QRCodeScanner 
+                        onScan={handleScan}
+                        onError={handleScanError}
+                        className="h-64"
+                      />
+                      
+                      {isProcessing && (
+                        <Card className="text-center py-4">
+                          <CardContent>
+                            <Loader size="lg" />
+                            <p className="text-neutral-600 mt-2">Traitement du QR Code...</p>
+                          </CardContent>
+                        </Card>
+                      )}
+                      
+                      {scannedCode && (
+                        <Card className="border-success-200 bg-success-50">
+                          <CardContent className="p-3">
+                            <p className="text-success-800 text-sm">
+                              <strong>Code scanné :</strong> {scannedCode}
+                            </p>
+                          </CardContent>
+                        </Card>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <Card className="text-center py-8">
+                  <CardContent>
+                    <Card className="border-success-200 bg-success-50 mb-4">
+                      <CardContent className="p-6">
+                        <CheckCircle className="h-16 w-16 text-success-600 mx-auto mb-2" />
+                        <p className="text-success-800 font-medium">QR Code scanné avec succès !</p>
+                      </CardContent>
+                    </Card>
+                    
+                    <Button
                       onClick={resetScanner}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-                >
-                      Réessayer
-                </button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <QRCodeScanner 
-                      onScan={handleScan}
-                      onError={handleScanError}
-                      className="h-64"
-                    />
-                    
-                    {isProcessing && (
-                      <div className="text-center py-4">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                        <p className="text-gray-600">Traitement du QR Code...</p>
-                      </div>
-                    )}
-                    
-                    {scannedCode && (
-                      <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                        <p className="text-green-800 text-sm">
-                          <strong>Code scanné :</strong> {scannedCode}
-                        </p>
-                      </div>
-                    )}
-                </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="bg-green-100 rounded-lg p-6 mb-4">
-                  <CheckCircle className="h-16 w-16 text-green-600 mx-auto mb-2" />
-                  <p className="text-green-800 font-medium">QR Code scanné avec succès !</p>
-                </div>
-                
-                  <button
-                  onClick={resetScanner}
-                    className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-                  >
-                  Scanner un autre QR Code
-                  </button>
-              </div>
-            )}
-          </div>
+                      variant="secondary"
+                    >
+                      Scanner un autre QR Code
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+            </CardContent>
+          </Card>
 
           {/* Résultat */}
-          <div className="bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-semibold mb-4">Informations Handover</h2>
+          <Card>
+            <CardHeader>
+              <h2 className="text-heading text-xl font-semibold">Informations Handover</h2>
+            </CardHeader>
             
-            {!handover ? (
-              <div className="text-center py-12">
-                <ScanLine className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-500">
-                  Scannez un QR code pour voir les informations du handover
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                {/* Informations de base */}
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-semibold text-lg">
-                      {handover.type === 'pickup' ? 'Retrait' : 'Restitution'}
-                    </h3>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(handover.status)}`}>
-                      {getStatusLabel(handover.status)}
-                    </span>
-                  </div>
-                  
-                  <div className="space-y-2 text-sm">
-                    <div className="flex items-center space-x-2">
-                      <User className="h-4 w-4 text-gray-500" />
-                      <span>Objet: {handover.reservation?.object?.title}</span>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <MapPin className="h-4 w-4 text-gray-500" />
-                      <span>{handover.pickup_address}</span>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <Calendar className="h-4 w-4 text-gray-500" />
-                      <span>
-                        Prévu le {new Date(handover.scheduled_date).toLocaleDateString('fr-FR')}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                {handover.status === 'pending' && (
-                  <div className="space-y-3">
-                    <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
-                      <p className="text-sm text-yellow-800">
-                        <strong>Instructions :</strong> Le scan QR code valide automatiquement le {handover.type === 'pickup' ? 'retrait' : 'restitution'} de l'objet.
-                      </p>
-                    </div>
-                    
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <p className="text-sm text-blue-800">
-                        <strong>Validation automatique :</strong> Une fois le QR code scanné, le statut sera automatiquement mis à jour.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {handover.status === 'picked_up' && handover.type === 'pickup' && (
-                  <div className="space-y-3">
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                      <p className="text-sm text-blue-800">
-                        <strong>Prochaine étape :</strong> Scannez le QR code de restitution pour marquer l'objet comme rendu.
-                      </p>
-                    </div>
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                      <p className="text-sm text-green-800">
-                        <strong>Validation QR :</strong> Le scan du QR code de restitution validera automatiquement la restitution.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {handover.notes && (
-                  <div className="bg-blue-50 rounded-lg p-3">
-                    <p className="text-sm text-blue-800">
-                      <strong>Notes :</strong> {handover.notes}
+            <CardContent>
+              {!handover ? (
+                <Card className="text-center py-12">
+                  <CardContent>
+                    <ScanLine className="h-16 w-16 text-neutral-400 mx-auto mb-4" />
+                    <p className="text-neutral-500">
+                      Scannez un QR code pour voir les informations du handover
                     </p>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
+                  </CardContent>
+                </Card>
+              ) : (
+                <div className="space-y-4">
+                  {/* Informations de base */}
+                  <Card className="bg-neutral-50">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-heading font-semibold text-lg">
+                          {handover.type === 'pickup' ? 'Retrait' : 'Restitution'}
+                        </h3>
+                        {getStatusBadge(handover.status)}
+                      </div>
+                      
+                      <div className="space-y-2 text-sm">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-neutral-500" />
+                          <span>Objet: {handover.reservation?.object?.title}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4 text-neutral-500" />
+                          <span>{handover.pickup_address}</span>
+                        </div>
+                        
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4 text-neutral-500" />
+                          <span>
+                            Prévu le {new Date(handover.scheduled_date).toLocaleDateString('fr-FR')}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Actions */}
+                  {handover.status === 'pending' && (
+                    <div className="space-y-3">
+                      <Card className="border-warning-200 bg-warning-50">
+                        <CardContent className="p-3">
+                          <p className="text-sm text-warning-800">
+                            <strong>Instructions :</strong> Le scan QR code valide automatiquement le {handover.type === 'pickup' ? 'retrait' : 'restitution'} de l'objet.
+                          </p>
+                        </CardContent>
+                      </Card>
+                      
+                      <Card className="border-brand-200 bg-brand-50">
+                        <CardContent className="p-3">
+                          <p className="text-sm text-brand-800">
+                            <strong>Validation automatique :</strong> Une fois le QR code scanné, le statut sera automatiquement mis à jour.
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+
+                  {handover.status === 'picked_up' && handover.type === 'pickup' && (
+                    <div className="space-y-3">
+                      <Card className="border-brand-200 bg-brand-50">
+                        <CardContent className="p-3">
+                          <p className="text-sm text-brand-800">
+                            <strong>Prochaine étape :</strong> Scannez le QR code de restitution pour marquer l'objet comme rendu.
+                          </p>
+                        </CardContent>
+                      </Card>
+                      <Card className="border-success-200 bg-success-50">
+                        <CardContent className="p-3">
+                          <p className="text-sm text-success-800">
+                            <strong>Validation QR :</strong> Le scan du QR code de restitution validera automatiquement la restitution.
+                          </p>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  )}
+
+                  {handover.notes && (
+                    <Card className="bg-brand-50">
+                      <CardContent className="p-3">
+                        <p className="text-sm text-brand-800">
+                          <strong>Notes :</strong> {handover.notes}
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

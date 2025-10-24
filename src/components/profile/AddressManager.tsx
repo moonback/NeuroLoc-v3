@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { MapPin, Edit, Save, X } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { profilesService } from '../../services/profiles.service';
+import { Card, CardContent, CardHeader } from '../common/Card';
+import { Button } from '../common/Button';
+import { Input } from '../common/Input';
 import toast from 'react-hot-toast';
 
 export const AddressManager = () => {
@@ -65,144 +68,161 @@ export const AddressManager = () => {
   const hasAddress = profile?.address && profile?.city && profile?.postal_code;
 
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center space-x-3">
-          <MapPin className="h-6 w-6 text-blue-600" />
-          <h3 className="text-lg font-semibold">Adresse de retrait</h3>
-        </div>
-        
-        {!isEditing && (
-          <button
-            onClick={() => setIsEditing(true)}
-            className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition"
-          >
-            <Edit className="h-4 w-4" />
-            <span className="text-sm">Modifier</span>
-          </button>
-        )}
-      </div>
-
-      {!hasAddress && !isEditing && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-          <div className="flex items-center space-x-2">
-            <MapPin className="h-5 w-5 text-yellow-600" />
-            <div>
-              <p className="text-yellow-800 font-medium">Adresse requise</p>
-              <p className="text-yellow-700 text-sm">
-                Vous devez configurer votre adresse pour pouvoir créer des handovers
-              </p>
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-brand-100 rounded-lg flex items-center justify-center">
+              <MapPin className="h-4 w-4 text-brand-600" />
             </div>
+            <h3 className="text-heading text-lg font-semibold">Adresse de retrait</h3>
           </div>
-        </div>
-      )}
-
-      {isEditing ? (
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Adresse *
-            </label>
-            <input
-              type="text"
-              value={formData.address}
-              onChange={(e) => handleInputChange('address', e.target.value)}
-              placeholder="Numéro et nom de rue"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Ville *
-              </label>
-              <input
-                type="text"
-                value={formData.city}
-                onChange={(e) => handleInputChange('city', e.target.value)}
-                placeholder="Ville"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Code postal *
-              </label>
-              <input
-                type="text"
-                value={formData.postal_code}
-                onChange={(e) => handleInputChange('postal_code', e.target.value)}
-                placeholder="75001"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Pays
-            </label>
-            <input
-              type="text"
-              value={formData.country}
-              onChange={(e) => handleInputChange('country', e.target.value)}
-              placeholder="France"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-
-          <div className="flex space-x-3 pt-4">
-            <button
-              onClick={handleSave}
-              disabled={isLoading || !formData.address || !formData.city || !formData.postal_code}
-              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+          
+          {!isEditing && (
+            <Button
+              onClick={() => setIsEditing(true)}
+              variant="ghost"
+              size="sm"
+              leftIcon={<Edit className="h-4 w-4" />}
             >
-              <Save className="h-4 w-4" />
-              <span>{isLoading ? 'Sauvegarde...' : 'Sauvegarder'}</span>
-            </button>
-            
-            <button
-              onClick={handleCancel}
-              className="flex items-center space-x-2 border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition"
-            >
-              <X className="h-4 w-4" />
-              <span>Annuler</span>
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {hasAddress ? (
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="space-y-1">
-                <p className="font-medium">{formData.address}</p>
-                <p className="text-gray-600">
-                  {formData.postal_code} {formData.city}
-                </p>
-                {formData.country && (
-                  <p className="text-gray-500 text-sm">{formData.country}</p>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <MapPin className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-500 mb-4">Aucune adresse configurée</p>
-              <button
-                onClick={() => setIsEditing(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-              >
-                Ajouter une adresse
-              </button>
-            </div>
+              Modifier
+            </Button>
           )}
         </div>
-      )}
-    </div>
+      </CardHeader>
+
+      <CardContent>
+        {!hasAddress && !isEditing && (
+          <Card className="mb-6 border-warning-200 bg-warning-50">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-3">
+                <MapPin className="h-5 w-5 text-warning-600 flex-shrink-0" />
+                <div>
+                  <p className="text-warning-800 font-medium">Adresse requise</p>
+                  <p className="text-warning-700 text-sm">
+                    Vous devez configurer votre adresse pour pouvoir créer des handovers
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {isEditing ? (
+          <div className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Adresse *
+              </label>
+              <Input
+                type="text"
+                value={formData.address}
+                onChange={(e) => handleInputChange('address', e.target.value)}
+                placeholder="Numéro et nom de rue"
+                leftIcon={MapPin}
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Ville *
+                </label>
+                <Input
+                  type="text"
+                  value={formData.city}
+                  onChange={(e) => handleInputChange('city', e.target.value)}
+                  placeholder="Ville"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-neutral-700 mb-2">
+                  Code postal *
+                </label>
+                <Input
+                  type="text"
+                  value={formData.postal_code}
+                  onChange={(e) => handleInputChange('postal_code', e.target.value)}
+                  placeholder="75001"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-neutral-700 mb-2">
+                Pays
+              </label>
+              <Input
+                type="text"
+                value={formData.country}
+                onChange={(e) => handleInputChange('country', e.target.value)}
+                placeholder="France"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-4">
+              <Button
+                onClick={handleSave}
+                disabled={isLoading || !formData.address || !formData.city || !formData.postal_code}
+                variant="primary"
+                leftIcon={<Save className="h-4 w-4" />}
+                isLoading={isLoading}
+              >
+                {isLoading ? 'Sauvegarde...' : 'Sauvegarder'}
+              </Button>
+              
+              <Button
+                onClick={handleCancel}
+                variant="ghost"
+                leftIcon={<X className="h-4 w-4" />}
+              >
+                Annuler
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {hasAddress ? (
+              <Card className="bg-neutral-50">
+                <CardContent className="p-4">
+                  <div className="space-y-2">
+                    <p className="text-heading font-medium">{formData.address}</p>
+                    <p className="text-body">
+                      {formData.postal_code} {formData.city}
+                    </p>
+                    {formData.country && (
+                      <p className="text-muted text-sm">{formData.country}</p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card className="text-center py-12">
+                <CardContent>
+                  <MapPin className="h-16 w-16 text-neutral-300 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-neutral-600 mb-2">
+                    Aucune adresse configurée
+                  </h3>
+                  <p className="text-neutral-500 mb-6">
+                    Configurez votre adresse pour pouvoir créer des handovers
+                  </p>
+                  <Button
+                    onClick={() => setIsEditing(true)}
+                    variant="primary"
+                    leftIcon={<MapPin className="h-4 w-4" />}
+                  >
+                    Ajouter une adresse
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 };

@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { geolocationService } from '../../services/geolocation.service';
 import { MapPin, Loader2 } from 'lucide-react';
+import { Input } from './Input';
+import { Loader } from './Loader';
 
 interface AddressAutocompleteProps {
   value: string;
@@ -128,7 +130,7 @@ export const AddressAutocomplete = ({
   return (
     <div className={`relative ${className}`}>
       <div className="relative">
-        <input
+        <Input
           ref={inputRef}
           type="text"
           value={value}
@@ -141,36 +143,31 @@ export const AddressAutocomplete = ({
           }}
           placeholder={placeholder}
           disabled={disabled}
-          className={`w-full px-4 py-2 pl-10 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-            disabled ? 'bg-gray-50 border-gray-200' : 'border-gray-300'
-          }`}
+          leftIcon={MapPin}
+          rightIcon={isLoading ? Loader2 : undefined}
         />
-        <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-        {isLoading && (
-          <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 animate-spin" />
-        )}
       </div>
 
       {showSuggestions && suggestions.length > 0 && (
         <div
           ref={suggestionsRef}
-          className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+          className="absolute z-50 w-full mt-1 bg-white border border-neutral-200 rounded-lg shadow-lg max-h-60 overflow-y-auto"
         >
           {suggestions.map((suggestion, index) => (
             <div
               key={`${suggestion.address}-${index}`}
               onClick={() => handleSuggestionClick(suggestion)}
-              className={`px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50 ${
-                index === selectedIndex ? 'bg-blue-50' : ''
+              className={`px-4 py-3 cursor-pointer border-b border-neutral-100 last:border-b-0 hover:bg-neutral-50 ${
+                index === selectedIndex ? 'bg-brand-50' : ''
               }`}
             >
-              <div className="flex items-start space-x-2">
-                <MapPin className="h-4 w-4 text-gray-400 mt-0.5 flex-shrink-0" />
+              <div className="flex items-start gap-2">
+                <MapPin className="h-4 w-4 text-neutral-400 mt-0.5 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-neutral-900 truncate">
                     {suggestion.address}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">
+                  <p className="text-xs text-neutral-500 truncate">
                     {suggestion.formatted_address}
                   </p>
                 </div>
@@ -181,8 +178,8 @@ export const AddressAutocomplete = ({
       )}
 
       {showSuggestions && suggestions.length === 0 && !isLoading && value.length >= 3 && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
-          <div className="px-4 py-3 text-center text-gray-500 text-sm">
+        <div className="absolute z-50 w-full mt-1 bg-white border border-neutral-200 rounded-lg shadow-lg">
+          <div className="px-4 py-3 text-center text-neutral-500 text-sm">
             Aucune adresse trouvée
           </div>
         </div>

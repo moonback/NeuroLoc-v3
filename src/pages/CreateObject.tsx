@@ -13,8 +13,9 @@ export const CreateObject = () => {
       const newObject = await objectsService.createObject(data);
       toast.success('Objet publié avec succès !');
       navigate(`/objects/${newObject.id}`);
-    } catch (error: any) {
-      toast.error(error.message || 'Erreur lors de la création de l\'objet');
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
+      toast.error(errorMessage || 'Erreur lors de la création de l\'objet');
       throw error;
     }
   };
@@ -22,7 +23,7 @@ export const CreateObject = () => {
   return (
     <LoueurOnly>
       <div className="min-h-screen bg-gray-50 py-8">
-        <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="bg-white rounded-xl shadow-lg p-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Publier un objet

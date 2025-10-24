@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from './Button';
 import { useGeolocation } from '../../hooks/useGeolocation';
 import { MapPin, Navigation, AlertCircle, CheckCircle } from 'lucide-react';
+import { Card, CardContent } from './Card';
 import toast from 'react-hot-toast';
 
 interface GeolocationButtonProps {
@@ -128,27 +129,29 @@ export const LocationDisplay = ({
   }
 
   return (
-    <div className={`bg-gray-50 rounded-lg p-4 ${className}`}>
-      <div className="flex items-start space-x-3">
-        <CheckCircle className="h-5 w-5 text-green-500 mt-0.5 flex-shrink-0" />
-        <div className="flex-1 min-w-0">
-          <h4 className="text-sm font-medium text-gray-900 mb-2">
-            Localisation détectée
-          </h4>
-          
-          {formatAddress() && (
-            <p className="text-sm text-gray-700 mb-1">
-              <span className="font-medium">Adresse :</span> {formatAddress()}
-            </p>
-          )}
-          
-          {formatCoordinates() && (
-            <p className="text-xs text-gray-500">
-              <span className="font-medium">Coordonnées :</span> {formatCoordinates()}
-            </p>
-          )}
+    <Card className={`bg-neutral-50 ${className}`}>
+      <CardContent className="p-4">
+        <div className="flex items-start gap-3">
+          <CheckCircle className="h-5 w-5 text-success-500 mt-0.5 flex-shrink-0" />
+          <div className="flex-1 min-w-0">
+            <h4 className="text-sm font-medium text-neutral-900 mb-2">
+              Localisation détectée
+            </h4>
+            
+            {formatAddress() && (
+              <p className="text-sm text-neutral-700 mb-1">
+                <span className="font-medium">Adresse :</span> {formatAddress()}
+              </p>
+            )}
+            
+            {formatCoordinates() && (
+              <p className="text-xs text-neutral-500">
+                <span className="font-medium">Coordonnées :</span> {formatCoordinates()}
+              </p>
+            )}
+          </div>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };

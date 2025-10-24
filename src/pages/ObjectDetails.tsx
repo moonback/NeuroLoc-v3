@@ -7,6 +7,10 @@ import { paymentService } from '../services/payment.service';
 import { messagesService } from '../services/messages.service';
 import { Loader } from '../components/common/Loader';
 import { Button } from '../components/common/Button';
+import { Card, CardContent, CardHeader } from '../components/common/Card';
+import { Input } from '../components/common/Input';
+import { Badge } from '../components/common/Badge';
+import { Avatar } from '../components/common/Avatar';
 import { MapPin, Euro, Calendar, User, MessageSquare } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -83,7 +87,11 @@ export const ObjectDetails = () => {
   if (!object) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-500">Objet non trouvé</p>
+        <Card>
+          <CardContent className="p-8 text-center">
+            <p className="text-neutral-500">Objet non trouvé</p>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -98,9 +106,9 @@ export const ObjectDetails = () => {
     : 0;
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-neutral-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <Card className="overflow-hidden">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <div className="relative h-96 lg:h-auto">
               <img
@@ -108,91 +116,99 @@ export const ObjectDetails = () => {
                 alt={object.title}
                 className="w-full h-full object-cover"
               />
-              <div className="absolute top-4 right-4 bg-blue-600 text-white px-4 py-2 rounded-full font-medium">
-                {object.status === 'available' ? 'Disponible' : 'Loué'}
+              <div className="absolute top-4 right-4">
+                <Badge variant={object.status === 'available' ? 'success' : 'default'}>
+                  {object.status === 'available' ? 'Disponible' : 'Loué'}
+                </Badge>
               </div>
             </div>
 
-            <div className="p-8">
-              <span className="inline-block bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm mb-4">
-                {object.category}
-              </span>
+            <CardContent className="p-8">
+              <div className="mb-4">
+                <Badge variant="default">{object.category}</Badge>
+              </div>
 
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              <h1 className="text-heading text-4xl font-bold mb-4">
                 {object.title}
               </h1>
 
-              <div className="flex items-center text-gray-600 mb-4">
+              <div className="flex items-center text-neutral-600 mb-4">
                 <MapPin className="h-5 w-5 mr-2" />
                 <span>{object.location}</span>
               </div>
 
-              <div className="flex items-center text-blue-600 text-3xl font-bold mb-6">
+              <div className="flex items-center text-brand-600 text-3xl font-bold mb-6">
                 <Euro className="h-8 w-8" />
                 <span>{object.price_per_day}</span>
-                <span className="text-lg text-gray-500 ml-2">/jour</span>
+                <span className="text-lg text-neutral-500 ml-2">/jour</span>
               </div>
 
-              <div className="border-t pt-6 mb-6">
-                <h2 className="text-xl font-semibold mb-3">Description</h2>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+              <div className="border-t border-neutral-200 pt-6 mb-6">
+                <h2 className="text-heading text-xl font-semibold mb-3">Description</h2>
+                <p className="text-body leading-relaxed whitespace-pre-line">
                   {object.description}
                 </p>
               </div>
 
               {object.owner && (
-                <div className="border-t pt-6 mb-6">
-                  <h2 className="text-xl font-semibold mb-3">Propriétaire</h2>
+                <div className="border-t border-neutral-200 pt-6 mb-6">
+                  <h2 className="text-heading text-xl font-semibold mb-3">Propriétaire</h2>
                   <div className="flex items-center">
-                    <div className="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold mr-3">
-                      <User className="h-6 w-6" />
-                    </div>
+                    <Avatar
+                      src={object.owner.avatar_url}
+                      alt={object.owner.full_name}
+                      name={object.owner.full_name}
+                      size="lg"
+                      className="mr-3"
+                    />
                     <div>
-                      <p className="font-medium">{object.owner.full_name}</p>
-                      <p className="text-sm text-gray-500">{object.owner.email}</p>
+                      <p className="text-heading font-medium">{object.owner.full_name}</p>
+                      <p className="text-muted text-sm">{object.owner.email}</p>
                     </div>
                   </div>
                 </div>
               )}
 
               {!isOwner && object.status === 'available' && (
-                <div className="border-t pt-6">
-                  <h2 className="text-xl font-semibold mb-4">Réserver</h2>
+                <div className="border-t border-neutral-200 pt-6">
+                  <h2 className="text-heading text-xl font-semibold mb-4">Réserver</h2>
 
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-neutral-700 mb-1">
                         Date de début
                       </label>
-                      <input
+                      <Input
                         type="date"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
                         min={new Date().toISOString().split('T')[0]}
+                        leftIcon={Calendar}
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                      <label className="block text-sm font-medium text-neutral-700 mb-1">
                         Date de fin
                       </label>
-                      <input
+                      <Input
                         type="date"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
                         min={startDate || new Date().toISOString().split('T')[0]}
+                        leftIcon={Calendar}
                       />
                     </div>
                   </div>
 
                   {totalPrice > 0 && (
-                    <div className="bg-blue-50 p-4 rounded-lg mb-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-gray-700">Prix total:</span>
-                        <span className="text-2xl font-bold text-blue-600">{totalPrice}€</span>
-                      </div>
-                    </div>
+                    <Card className="bg-brand-50 border-brand-200 mb-4">
+                      <CardContent className="p-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-neutral-700">Prix total:</span>
+                          <span className="text-2xl font-bold text-brand-600">{totalPrice}€</span>
+                        </div>
+                      </CardContent>
+                    </Card>
                   )}
 
                   <div className="space-y-3">
@@ -201,8 +217,8 @@ export const ObjectDetails = () => {
                       className="w-full"
                       isLoading={isBooking}
                       disabled={!startDate || !endDate}
+                      leftIcon={<Calendar className="h-5 w-5" />}
                     >
-                      <Calendar className="h-5 w-5 mr-2" />
                       Réserver maintenant
                     </Button>
 
@@ -210,16 +226,16 @@ export const ObjectDetails = () => {
                       onClick={handleContactOwner}
                       variant="secondary"
                       className="w-full"
+                      leftIcon={<MessageSquare className="h-5 w-5" />}
                     >
-                      <MessageSquare className="h-5 w-5 mr-2" />
                       Contacter le propriétaire
                     </Button>
                   </div>
                 </div>
               )}
-            </div>
+            </CardContent>
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
