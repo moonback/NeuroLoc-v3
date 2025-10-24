@@ -15,7 +15,6 @@ import { ReservationHandovers } from '../components/handovers/ReservationHandove
 import { AddressManager } from '../components/profile/AddressManager';
 import { CompletedReservations } from '../components/profile/CompletedReservations';
 import { RoleStats } from '../components/profile/RoleStats';
-import { diagnosticUtils } from '../utils/diagnostic';
 import toast from 'react-hot-toast';
 
 export const Dashboard = () => {
@@ -177,16 +176,6 @@ export const Dashboard = () => {
     }
   };
 
-  const handleDiagnostic = async () => {
-    try {
-      await diagnosticUtils.generateDiagnosticReport();
-      toast.success('✅ Diagnostic terminé - Vérifiez la console pour les détails');
-      loadData(); // Recharger les données après correction
-    } catch (error: unknown) {
-      console.error('Error running diagnostic:', error);
-      toast.error('Erreur lors du diagnostic');
-    }
-  };
 
   if (loading || authLoading) {
     return (
@@ -216,14 +205,7 @@ export const Dashboard = () => {
                 <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
                 <span className="text-white">Actualiser</span>
               </button>
-              <button
-                onClick={handleDiagnostic}
-                disabled={loading}
-                className="flex items-center space-x-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <AlertCircle className="h-4 w-4" />
-                <span className="text-white">Diagnostic</span>
-              </button>
+              
             </div>
           </div>
           
