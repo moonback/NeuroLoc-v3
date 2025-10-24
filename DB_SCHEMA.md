@@ -1,361 +1,365 @@
-# Schéma de base de données NeuroLoc
+# 🗄️ Schéma de Base de Données NeuroLoc
 
-## Vue d'ensemble
+## Vue d'Ensemble
 
-La base de données NeuroLoc utilise PostgreSQL avec Supabase et implémente un schéma relationnel optimisé pour une plateforme de location d'objets entre particuliers. Le design privilégie la sécurité, les performances et la scalabilité.
+NeuroLoc utilise PostgreSQL via Supabase pour stocker toutes les données de l'application. Ce document décrit la structure complète de la base de données, les relations entre les tables et les politiques de sécurité.
 
-## Architecture générale
-
-### Technologies utilisées
-- **PostgreSQL 15+** : Base de données relationnelle
-- **Row Level Security (RLS)** : Sécurité au niveau des lignes
-- **UUID** : Identifiants uniques pour toutes les entités
-- **Triggers** : Automatisation des tâches récurrentes
-- **Fonctions SQL** : Logique métier côté serveur
-- **Index** : Optimisation des performances
-
-### Principes de design
-- **Normalisation** : Éviter la redondance des données
-- **Intégrité référentielle** : Contraintes de clés étrangères
-- **Sécurité** : RLS sur toutes les tables sensibles
-- **Performance** : Index stratégiques pour les requêtes fréquentes
-- **Audit** : Traçabilité des modifications
-
-## Diagramme ERD
+## 📊 Diagramme ERD
 
 ```mermaid
 erDiagram
-    PROFILES ||--o{ OBJECTS : owns
-    PROFILES ||--o{ RESERVATIONS : rents
-    PROFILES ||--o{ RESERVATIONS : owns
-    PROFILES ||--o{ MESSAGES : sends
-    PROFILES ||--o{ MESSAGES : receives
-    PROFILES ||--o{ REVIEWS : writes
-    PROFILES ||--o{ REVIEWS : receives
+    profiles ||--o{ objects : owns
+    profiles ||--o{ reservations : rents
+    profiles ||--o{ reservations : receives
+    profiles ||--o{ messages : sends
+    profiles ||--o{ messages : receives
+    profiles ||--o{ reviews : gives
+    profiles ||--o{ reviews : receives
+    objects ||--o{ reservations : "is reserved"
+    objects ||--o{ messages : "is discussed"
+    reservations ||--o{ messages : "has messages"
+    reservations ||--o{ reviews : "has reviews"
+    reservations ||--o{ handovers : "has handovers"
     
-    OBJECTS ||--o{ RESERVATIONS : has
-    OBJECTS ||--o{ MESSAGES : references
-    RESERVATIONS ||--o{ REVIEWS : generates
-    
-    PROFILES {
-        uuid id PK
-        text email UK
-        text full_name
-        text avatar_url
-        text phone
-        text bio
-        text address
-        text city
-        text postal_code
-        text country
-        decimal latitude
-        decimal longitude
-        timestamptz created_at
-        timestamptz updated_at
+    profiles {
+        uuid id PK "Clé primaire liée à auth.users"
+        text email UK "Email unique"
+        text full_name "Nom complet"
+        text avatar_url "URL de l'avatar"
+        text phone "Numéro de téléphone"
+        text bio "Biographie"
+        text address "Adresse"
+        text city "Ville"
+        text postal_code "Code postal"
+        text country "Pays"
+        decimal latitude "Latitude GPS"
+        decimal longitude "Longitude GPS"
+        text role "Rôle utilisateur"
+        boolean is_verified "Statut vérifié"
+        timestamp created_at "Date de création"
+        timestamp updated_at "Date de mise à jour"
     }
     
-    OBJECTS {
-        uuid id PK
-        uuid owner_id FK
-        text title
-        text description
-        text category
-        decimal price_per_day
-        text[] images
-        text location
-        decimal latitude
-        decimal longitude
-        text status
-        timestamptz created_at
-        timestamptz updated_at
+    objects {
+        uuid id PK "Identifiant unique"
+        uuid owner_id FK "Propriétaire de l'objet"
+        text title "Titre de l'objet"
+        text description "Description détaillée"
+        text category "Catégorie"
+        decimal price_per_day "Prix par jour"
+        text[] images "Tableau d'URLs d'images"
+        text location "Localisation textuelle"
+        decimal latitude "Latitude GPS"
+        decimal longitude "Longitude GPS"
+        text status "Statut de disponibilité"
+        timestamp created_at "Date de création"
+        timestamp updated_at "Date de mise à jour"
     }
     
-    RESERVATIONS {
-        uuid id PK
-        uuid object_id FK
-        uuid renter_id FK
-        uuid owner_id FK
-        date start_date
-        date end_date
-        decimal total_price
-        text status
-        text stripe_payment_intent
-        timestamptz created_at
-        timestamptz updated_at
+    reservations {
+        uuid id PK "Identifiant unique"
+        uuid object_id FK "Objet réservé"
+        uuid renter_id FK "Locataire"
+        uuid owner_id FK "Propriétaire"
+        date start_date "Date de début"
+        date end_date "Date de fin"
+        decimal total_price "Prix total"
+        text status "Statut de la réservation"
+        text stripe_payment_intent "ID paiement Stripe"
+        timestamp created_at "Date de création"
+        timestamp updated_at "Date de mise à jour"
     }
     
-    MESSAGES {
-        uuid id PK
-        uuid conversation_id
-        uuid sender_id FK
-        uuid receiver_id FK
-        uuid object_id FK
-        text content
-        boolean read
-        timestamptz created_at
+    messages {
+        uuid id PK "Identifiant unique"
+        text conversation_id "ID de conversation"
+        uuid sender_id FK "Expéditeur"
+        uuid receiver_id FK "Destinataire"
+        uuid object_id FK "Objet lié (optionnel)"
+        text content "Contenu du message"
+        boolean read "Statut de lecture"
+        timestamp created_at "Date d'envoi"
     }
     
-    REVIEWS {
-        uuid id PK
-        uuid reservation_id FK
-        uuid reviewer_id FK
-        uuid reviewed_id FK
-        integer rating
-        text comment
-        timestamptz created_at
+    reviews {
+        uuid id PK "Identifiant unique"
+        uuid reservation_id FK "Réservation évaluée"
+        uuid reviewer_id FK "Évaluateur"
+        uuid reviewed_id FK "Utilisateur évalué"
+        integer rating "Note (1-5)"
+        text comment "Commentaire"
+        timestamp created_at "Date de création"
+    }
+    
+    handovers {
+        uuid id PK "Identifiant unique"
+        uuid reservation_id FK "Réservation liée"
+        text type "Type de remise"
+        text status "Statut de la remise"
+        text qr_code "Code QR unique"
+        text pickup_address "Adresse de remise"
+        decimal pickup_latitude "Latitude de remise"
+        decimal pickup_longitude "Longitude de remise"
+        timestamp scheduled_date "Date prévue"
+        timestamp actual_date "Date effective"
+        text notes "Notes additionnelles"
+        timestamp created_at "Date de création"
+        timestamp updated_at "Date de mise à jour"
     }
 ```
 
-## Tables détaillées
+## 📋 Description Détaillée des Tables
 
-### 1. Table `profiles`
+### 👤 Table `profiles`
 
-**Description :** Stocke les informations détaillées des utilisateurs, liée à `auth.users` de Supabase.
+**Description** : Stocke les informations détaillées des utilisateurs authentifiés.
 
+| Champ | Type | Contraintes | Description |
+|-------|------|-------------|-------------|
+| `id` | `uuid` | PK, FK vers `auth.users` | Identifiant unique lié à l'authentification |
+| `email` | `text` | UNIQUE, NOT NULL | Adresse email de l'utilisateur |
+| `full_name` | `text` | NULL | Nom complet affiché |
+| `avatar_url` | `text` | NULL | URL de l'image de profil |
+| `phone` | `text` | NULL | Numéro de téléphone |
+| `bio` | `text` | NULL | Biographie de l'utilisateur |
+| `address` | `text` | NULL | Adresse complète |
+| `city` | `text` | NULL | Ville |
+| `postal_code` | `text` | NULL | Code postal |
+| `country` | `text` | NULL | Pays |
+| `latitude` | `decimal(10,8)` | NULL | Coordonnée GPS latitude |
+| `longitude` | `decimal(11,8)` | NULL | Coordonnée GPS longitude |
+| `role` | `text` | CHECK | Rôle : 'client', 'loueur', 'admin' |
+| `is_verified` | `boolean` | DEFAULT false | Statut de vérification |
+| `created_at` | `timestamptz` | DEFAULT now() | Date de création |
+| `updated_at` | `timestamptz` | DEFAULT now() | Date de mise à jour |
+
+**Index** :
+- `idx_profiles_email` sur `email`
+- `idx_profiles_role` sur `role`
+- `idx_profiles_location` sur `(latitude, longitude)`
+
+### 📦 Table `objects`
+
+**Description** : Contient tous les objets disponibles à la location.
+
+| Champ | Type | Contraintes | Description |
+|-------|------|-------------|-------------|
+| `id` | `uuid` | PK, DEFAULT uuid_generate_v4() | Identifiant unique |
+| `owner_id` | `uuid` | FK vers `profiles`, NOT NULL | Propriétaire de l'objet |
+| `title` | `text` | NOT NULL | Titre de l'objet |
+| `description` | `text` | NOT NULL | Description détaillée |
+| `category` | `text` | NOT NULL | Catégorie de l'objet |
+| `price_per_day` | `decimal(10,2)` | NOT NULL, CHECK >= 0 | Prix par jour |
+| `images` | `text[]` | DEFAULT ARRAY[] | URLs des images |
+| `location` | `text` | NOT NULL | Localisation textuelle |
+| `latitude` | `decimal(10,8)` | NULL | Coordonnée GPS latitude |
+| `longitude` | `decimal(11,8)` | NULL | Coordonnée GPS longitude |
+| `status` | `text` | DEFAULT 'available', CHECK | Statut : 'available', 'rented', 'unavailable' |
+| `created_at` | `timestamptz` | DEFAULT now() | Date de création |
+| `updated_at` | `timestamptz` | DEFAULT now() | Date de mise à jour |
+
+**Index** :
+- `idx_objects_owner` sur `owner_id`
+- `idx_objects_category` sur `category`
+- `idx_objects_status` sur `status`
+- `idx_objects_location` sur `(latitude, longitude)`
+- `idx_objects_price` sur `price_per_day`
+
+### 📅 Table `reservations`
+
+**Description** : Gère les réservations d'objets entre utilisateurs.
+
+| Champ | Type | Contraintes | Description |
+|-------|------|-------------|-------------|
+| `id` | `uuid` | PK, DEFAULT uuid_generate_v4() | Identifiant unique |
+| `object_id` | `uuid` | FK vers `objects`, NOT NULL | Objet réservé |
+| `renter_id` | `uuid` | FK vers `profiles`, NOT NULL | Locataire |
+| `owner_id` | `uuid` | FK vers `profiles`, NOT NULL | Propriétaire |
+| `start_date` | `date` | NOT NULL | Date de début de location |
+| `end_date` | `date` | NOT NULL | Date de fin de location |
+| `total_price` | `decimal(10,2)` | NOT NULL, CHECK >= 0 | Prix total calculé |
+| `status` | `text` | DEFAULT 'pending', CHECK | Statut de la réservation |
+| `stripe_payment_intent` | `text` | NULL | ID du paiement Stripe |
+| `created_at` | `timestamptz` | DEFAULT now() | Date de création |
+| `updated_at` | `timestamptz` | DEFAULT now() | Date de mise à jour |
+
+**Statuts possibles** :
+- `pending` : En attente de confirmation
+- `confirmed` : Confirmée et payée
+- `ongoing` : En cours de location
+- `completed` : Terminée avec succès
+- `cancelled` : Annulée
+- `rejected` : Refusée par le propriétaire
+
+**Index** :
+- `idx_reservations_object` sur `object_id`
+- `idx_reservations_renter` sur `renter_id`
+- `idx_reservations_owner` sur `owner_id`
+- `idx_reservations_dates` sur `(start_date, end_date)`
+- `idx_reservations_status` sur `status`
+
+### 💬 Table `messages`
+
+**Description** : Stocke les messages de la messagerie intégrée.
+
+| Champ | Type | Contraintes | Description |
+|-------|------|-------------|-------------|
+| `id` | `uuid` | PK, DEFAULT uuid_generate_v4() | Identifiant unique |
+| `conversation_id` | `text` | NOT NULL | ID de conversation |
+| `sender_id` | `uuid` | FK vers `profiles`, NOT NULL | Expéditeur |
+| `receiver_id` | `uuid` | FK vers `profiles`, NOT NULL | Destinataire |
+| `object_id` | `uuid` | FK vers `objects`, NULL | Objet lié (optionnel) |
+| `content` | `text` | NOT NULL | Contenu du message |
+| `read` | `boolean` | DEFAULT false | Statut de lecture |
+| `created_at` | `timestamptz` | DEFAULT now() | Date d'envoi |
+
+**Index** :
+- `idx_messages_conversation` sur `conversation_id`
+- `idx_messages_sender` sur `sender_id`
+- `idx_messages_receiver` sur `receiver_id`
+- `idx_messages_object` sur `object_id`
+- `idx_messages_created` sur `created_at DESC`
+
+### ⭐ Table `reviews`
+
+**Description** : Gère les avis et évaluations entre utilisateurs.
+
+| Champ | Type | Contraintes | Description |
+|-------|------|-------------|-------------|
+| `id` | `uuid` | PK, DEFAULT uuid_generate_v4() | Identifiant unique |
+| `reservation_id` | `uuid` | FK vers `reservations`, NOT NULL | Réservation évaluée |
+| `reviewer_id` | `uuid` | FK vers `profiles`, NOT NULL | Utilisateur qui évalue |
+| `reviewed_id` | `uuid` | FK vers `profiles`, NOT NULL | Utilisateur évalué |
+| `rating` | `integer` | NOT NULL, CHECK (1-5) | Note de 1 à 5 étoiles |
+| `comment` | `text` | NULL | Commentaire textuel |
+| `created_at` | `timestamptz` | DEFAULT now() | Date de création |
+
+**Contraintes** :
+- Un utilisateur ne peut évaluer qu'une fois par réservation
+- Seules les réservations terminées peuvent être évaluées
+
+**Index** :
+- `idx_reviews_reservation` sur `reservation_id`
+- `idx_reviews_reviewer` sur `reviewer_id`
+- `idx_reviews_reviewed` sur `reviewed_id`
+- `idx_reviews_rating` sur `rating`
+
+### 📱 Table `handovers`
+
+**Description** : Gère les remises d'objets avec QR codes.
+
+| Champ | Type | Contraintes | Description |
+|-------|------|-------------|-------------|
+| `id` | `uuid` | PK, DEFAULT uuid_generate_v4() | Identifiant unique |
+| `reservation_id` | `uuid` | FK vers `reservations`, NOT NULL | Réservation liée |
+| `type` | `text` | NOT NULL, CHECK | Type : 'pickup' ou 'return' |
+| `status` | `text` | DEFAULT 'pending', CHECK | Statut de la remise |
+| `qr_code` | `text` | NOT NULL, UNIQUE | Code QR unique |
+| `pickup_address` | `text` | NOT NULL | Adresse de remise |
+| `pickup_latitude` | `decimal(10,8)` | NULL | Latitude de remise |
+| `pickup_longitude` | `decimal(11,8)` | NULL | Longitude de remise |
+| `scheduled_date` | `timestamptz` | NOT NULL | Date prévue de remise |
+| `actual_date` | `timestamptz` | NULL | Date effective de remise |
+| `notes` | `text` | NULL | Notes additionnelles |
+| `created_at` | `timestamptz` | DEFAULT now() | Date de création |
+| `updated_at` | `timestamptz` | DEFAULT now() | Date de mise à jour |
+
+**Statuts possibles** :
+- `pending` : En attente
+- `picked_up` : Récupéré
+- `returned` : Rendu
+- `cancelled` : Annulé
+
+**Index** :
+- `idx_handovers_reservation` sur `reservation_id`
+- `idx_handovers_qr_code` sur `qr_code`
+- `idx_handovers_status` sur `status`
+- `idx_handovers_type` sur `type`
+
+## 🔒 Sécurité (Row Level Security)
+
+### Politiques RLS
+
+#### Table `profiles`
 ```sql
-CREATE TABLE profiles (
-  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
-  email text UNIQUE NOT NULL,
-  full_name text,
-  avatar_url text,
-  phone text,
-  bio text,
-  address text,
-  city text,
-  postal_code text,
-  country text,
-  latitude decimal(10,8),
-  longitude decimal(11,8),
-  created_at timestamptz DEFAULT now() NOT NULL,
-  updated_at timestamptz DEFAULT now() NOT NULL
+-- Lecture : Tous les utilisateurs authentifiés peuvent voir les profils publics
+CREATE POLICY "Public profiles are viewable by authenticated users" ON profiles
+FOR SELECT USING (auth.role() = 'authenticated');
+
+-- Modification : Seul le propriétaire peut modifier son profil
+CREATE POLICY "Users can update their own profile" ON profiles
+FOR UPDATE USING (auth.uid() = id);
+```
+
+#### Table `objects`
+```sql
+-- Lecture : Tous les objets disponibles sont visibles
+CREATE POLICY "Available objects are viewable by authenticated users" ON objects
+FOR SELECT USING (auth.role() = 'authenticated');
+
+-- Modification : Seul le propriétaire peut modifier ses objets
+CREATE POLICY "Users can update their own objects" ON objects
+FOR UPDATE USING (auth.uid() = owner_id);
+```
+
+#### Table `reservations`
+```sql
+-- Lecture : Accès limité aux parties concernées
+CREATE POLICY "Users can view their own reservations" ON reservations
+FOR SELECT USING (
+  auth.uid() = renter_id OR 
+  auth.uid() = owner_id
 );
+
+-- Modification : Seul le propriétaire peut confirmer/refuser
+CREATE POLICY "Owners can update reservation status" ON reservations
+FOR UPDATE USING (auth.uid() = owner_id);
 ```
 
-**Contraintes :**
-- `id` : Clé primaire liée à `auth.users`
-- `email` : Unique et non null
-- `latitude` : Entre -90 et 90
-- `longitude` : Entre -180 et 180
-
-**Index :**
+#### Table `messages`
 ```sql
-CREATE INDEX idx_profiles_location ON profiles(latitude, longitude) 
-WHERE latitude IS NOT NULL AND longitude IS NOT NULL;
-CREATE INDEX idx_profiles_city ON profiles(city) WHERE city IS NOT NULL;
-CREATE INDEX idx_profiles_country ON profiles(country) WHERE country IS NOT NULL;
-```
-
-### 2. Table `objects`
-
-**Description :** Contient tous les objets disponibles à la location.
-
-```sql
-CREATE TABLE objects (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  owner_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  title text NOT NULL,
-  description text NOT NULL,
-  category text NOT NULL,
-  price_per_day decimal(10,2) NOT NULL CHECK (price_per_day >= 0),
-  images text[] DEFAULT ARRAY[]::text[],
-  location text NOT NULL,
-  latitude decimal(10,8),
-  longitude decimal(11,8),
-  status text NOT NULL DEFAULT 'available' 
-    CHECK (status IN ('available', 'rented', 'unavailable')),
-  created_at timestamptz DEFAULT now() NOT NULL,
-  updated_at timestamptz DEFAULT now() NOT NULL
+-- Lecture : Accès limité aux participants de la conversation
+CREATE POLICY "Users can view their own messages" ON messages
+FOR SELECT USING (
+  auth.uid() = sender_id OR 
+  auth.uid() = receiver_id
 );
+
+-- Insertion : Seul l'expéditeur peut envoyer
+CREATE POLICY "Users can send messages" ON messages
+FOR INSERT WITH CHECK (auth.uid() = sender_id);
 ```
 
-**Contraintes :**
-- `price_per_day` : Doit être positif ou zéro
-- `status` : Valeurs limitées à 'available', 'rented', 'unavailable'
-- `latitude/longitude` : Coordonnées GPS valides
+## 📊 Fonctions et Triggers
 
-**Index :**
+### Fonctions Utilitaires
+
+#### Calcul du Prix Total
 ```sql
-CREATE INDEX idx_objects_owner_id ON objects(owner_id);
-CREATE INDEX idx_objects_status ON objects(status);
-CREATE INDEX idx_objects_category ON objects(category);
-CREATE INDEX idx_objects_location ON objects(location);
-CREATE INDEX idx_objects_price ON objects(price_per_day);
-```
-
-### 3. Table `reservations`
-
-**Description :** Gère les réservations d'objets avec suivi des paiements.
-
-```sql
-CREATE TABLE reservations (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  object_id uuid NOT NULL REFERENCES objects(id) ON DELETE CASCADE,
-  renter_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  owner_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  start_date date NOT NULL,
-  end_date date NOT NULL,
-  total_price decimal(10,2) NOT NULL CHECK (total_price >= 0),
-  status text NOT NULL DEFAULT 'pending' 
-    CHECK (status IN ('pending', 'confirmed', 'ongoing', 'completed', 'cancelled')),
-  stripe_payment_intent text,
-  created_at timestamptz DEFAULT now() NOT NULL,
-  updated_at timestamptz DEFAULT now() NOT NULL,
-  CONSTRAINT valid_dates CHECK (end_date > start_date)
-);
-```
-
-**Contraintes :**
-- `total_price` : Doit être positif ou zéro
-- `status` : Valeurs limitées aux statuts de réservation
-- `valid_dates` : La date de fin doit être après la date de début
-
-**Index :**
-```sql
-CREATE INDEX idx_reservations_object_id ON reservations(object_id);
-CREATE INDEX idx_reservations_renter_id ON reservations(renter_id);
-CREATE INDEX idx_reservations_owner_id ON reservations(owner_id);
-CREATE INDEX idx_reservations_dates ON reservations(start_date, end_date);
-CREATE INDEX idx_reservations_status ON reservations(status);
-```
-
-### 4. Table `messages`
-
-**Description :** Système de messagerie entre utilisateurs.
-
-```sql
-CREATE TABLE messages (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  conversation_id uuid NOT NULL,
-  sender_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  receiver_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  object_id uuid REFERENCES objects(id) ON DELETE SET NULL,
-  content text NOT NULL,
-  read boolean DEFAULT false NOT NULL,
-  created_at timestamptz DEFAULT now() NOT NULL
-);
-```
-
-**Contraintes :**
-- `content` : Non null et non vide
-- `object_id` : Optionnel, peut être null
-
-**Index :**
-```sql
-CREATE INDEX idx_messages_conversation_id ON messages(conversation_id);
-CREATE INDEX idx_messages_sender_id ON messages(sender_id);
-CREATE INDEX idx_messages_receiver_id ON messages(receiver_id);
-CREATE INDEX idx_messages_created_at ON messages(created_at);
-CREATE INDEX idx_messages_read ON messages(read) WHERE read = false;
-```
-
-### 5. Table `reviews`
-
-**Description :** Système d'avis et évaluations entre utilisateurs.
-
-```sql
-CREATE TABLE reviews (
-  id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  reservation_id uuid NOT NULL REFERENCES reservations(id) ON DELETE CASCADE,
-  reviewer_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  reviewed_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  rating integer NOT NULL CHECK (rating >= 1 AND rating <= 5),
-  comment text,
-  created_at timestamptz DEFAULT now() NOT NULL,
-  UNIQUE(reservation_id, reviewer_id)
-);
-```
-
-**Contraintes :**
-- `rating` : Entre 1 et 5 inclus
-- `UNIQUE(reservation_id, reviewer_id)` : Un avis par réservation par utilisateur
-
-**Index :**
-```sql
-CREATE INDEX idx_reviews_reviewed_id ON reviews(reviewed_id);
-CREATE INDEX idx_reviews_reviewer_id ON reviews(reviewer_id);
-CREATE INDEX idx_reviews_rating ON reviews(rating);
-CREATE INDEX idx_reviews_created_at ON reviews(created_at);
-```
-
-## Fonctions SQL personnalisées
-
-### 1. Fonction de calcul de distance
-
-```sql
-CREATE OR REPLACE FUNCTION calculate_distance(
-  lat1 decimal(10,8),
-  lon1 decimal(11,8),
-  lat2 decimal(10,8),
-  lon2 decimal(11,8)
-)
-RETURNS decimal(10,2) AS $$
-DECLARE
-  earth_radius decimal(10,2) := 6371; -- Rayon de la Terre en kilomètres
-  dlat decimal(10,8);
-  dlon decimal(11,8);
-  a decimal(20,10);
-  c decimal(20,10);
-  distance decimal(10,2);
+CREATE OR REPLACE FUNCTION calculate_total_price(
+  p_price_per_day DECIMAL,
+  p_start_date DATE,
+  p_end_date DATE
+) RETURNS DECIMAL AS $$
 BEGIN
-  -- Validation des coordonnées
-  IF lat1 IS NULL OR lon1 IS NULL OR lat2 IS NULL OR lon2 IS NULL THEN
-    RETURN NULL;
-  END IF;
-  
-  -- Conversion en radians et calcul Haversine
-  dlat := radians(lat2 - lat1);
-  dlon := radians(lon2 - lon1);
-  
-  a := sin(dlat/2) * sin(dlat/2) + 
-       cos(radians(lat1)) * cos(radians(lat2)) * 
-       sin(dlon/2) * sin(dlon/2);
-  
-  c := 2 * atan2(sqrt(a), sqrt(1-a));
-  distance := earth_radius * c;
-  
-  RETURN round(distance * 100) / 100;
-END;
-$$ LANGUAGE plpgsql IMMUTABLE;
-```
-
-### 2. Fonction de recherche géographique
-
-```sql
-CREATE OR REPLACE FUNCTION find_users_within_radius(
-  center_lat decimal(10,8),
-  center_lon decimal(11,8),
-  radius_km decimal(10,2)
-)
-RETURNS TABLE(
-  user_id uuid,
-  full_name text,
-  city text,
-  country text,
-  latitude decimal(10,8),
-  longitude decimal(11,8),
-  distance_km decimal(10,2)
-) AS $$
-BEGIN
-  RETURN QUERY
-  SELECT 
-    p.id as user_id,
-    p.full_name,
-    p.city,
-    p.country,
-    p.latitude,
-    p.longitude,
-    calculate_distance(center_lat, center_lon, p.latitude, p.longitude) as distance_km
-  FROM profiles p
-  WHERE p.latitude IS NOT NULL 
-    AND p.longitude IS NOT NULL
-    AND calculate_distance(center_lat, center_lon, p.latitude, p.longitude) <= radius_km
-  ORDER BY distance_km ASC;
+  RETURN p_price_per_day * (p_end_date - p_start_date + 1);
 END;
 $$ LANGUAGE plpgsql;
 ```
 
-### 3. Fonction de mise à jour automatique
+#### Génération de QR Code
+```sql
+CREATE OR REPLACE FUNCTION generate_qr_code()
+RETURNS TEXT AS $$
+BEGIN
+  RETURN 'QR_' || encode(gen_random_bytes(16), 'hex');
+END;
+$$ LANGUAGE plpgsql;
+```
 
+### Triggers Automatiques
+
+#### Mise à Jour des Timestamps
 ```sql
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
@@ -364,276 +368,103 @@ BEGIN
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
-```
 
-## Triggers
-
-### 1. Mise à jour automatique des timestamps
-
-```sql
--- Triggers pour updated_at
+-- Application sur toutes les tables avec updated_at
 CREATE TRIGGER update_profiles_updated_at 
-  BEFORE UPDATE ON profiles
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_objects_updated_at 
-  BEFORE UPDATE ON objects
-  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_reservations_updated_at 
-  BEFORE UPDATE ON reservations
+  BEFORE UPDATE ON profiles 
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 ```
 
-### 2. Création automatique de profil
-
+#### Mise à Jour du Statut des Objets
 ```sql
-CREATE OR REPLACE FUNCTION handle_new_user()
+CREATE OR REPLACE FUNCTION update_object_status()
 RETURNS TRIGGER AS $$
 BEGIN
-  INSERT INTO public.profiles (id, email, full_name)
-  VALUES (NEW.id, NEW.email, NEW.raw_user_meta_data->>'full_name');
+  -- Mettre à jour le statut de l'objet selon les réservations
+  IF NEW.status = 'confirmed' THEN
+    UPDATE objects SET status = 'rented' WHERE id = NEW.object_id;
+  ELSIF NEW.status = 'completed' THEN
+    UPDATE objects SET status = 'available' WHERE id = NEW.object_id;
+  END IF;
+  
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION handle_new_user();
-```
-
-## Row Level Security (RLS)
-
-### Activation RLS
-
-```sql
--- Activer RLS sur toutes les tables
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE objects ENABLE ROW LEVEL SECURITY;
-ALTER TABLE reservations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
-ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;
-```
-
-### Policies pour `profiles`
-
-```sql
--- Lecture publique des profils
-CREATE POLICY "Users can view all profiles"
-  ON profiles FOR SELECT
-  TO authenticated
-  USING (true);
-
--- Modification de son propre profil
-CREATE POLICY "Users can update own profile"
-  ON profiles FOR UPDATE
-  TO authenticated
-  USING (auth.uid() = id)
-  WITH CHECK (auth.uid() = id);
-```
-
-### Policies pour `objects`
-
-```sql
--- Lecture publique des objets disponibles
-CREATE POLICY "Anyone can view available objects"
-  ON objects FOR SELECT
-  TO authenticated
-  USING (true);
-
--- Création d'objets par utilisateurs authentifiés
-CREATE POLICY "Users can create objects"
-  ON objects FOR INSERT
-  TO authenticated
-  WITH CHECK (auth.uid() = owner_id);
-
--- Modification de ses propres objets
-CREATE POLICY "Owners can update own objects"
-  ON objects FOR UPDATE
-  TO authenticated
-  USING (auth.uid() = owner_id)
-  WITH CHECK (auth.uid() = owner_id);
-
--- Suppression de ses propres objets
-CREATE POLICY "Owners can delete own objects"
-  ON objects FOR DELETE
-  TO authenticated
-  USING (auth.uid() = owner_id);
-```
-
-### Policies pour `reservations`
-
-```sql
--- Lecture des réservations par les parties concernées
-CREATE POLICY "Users can view own reservations as renter"
-  ON reservations FOR SELECT
-  TO authenticated
-  USING (auth.uid() = renter_id OR auth.uid() = owner_id);
-
--- Création de réservations
-CREATE POLICY "Users can create reservations"
-  ON reservations FOR INSERT
-  TO authenticated
-  WITH CHECK (auth.uid() = renter_id);
-
--- Modification par les parties concernées
-CREATE POLICY "Renters and owners can update reservations"
-  ON reservations FOR UPDATE
-  TO authenticated
-  USING (auth.uid() = renter_id OR auth.uid() = owner_id)
-  WITH CHECK (auth.uid() = renter_id OR auth.uid() = owner_id);
-```
-
-### Policies pour `messages`
-
-```sql
--- Lecture des messages par les participants
-CREATE POLICY "Users can view messages they sent or received"
-  ON messages FOR SELECT
-  TO authenticated
-  USING (auth.uid() = sender_id OR auth.uid() = receiver_id);
-
--- Envoi de messages
-CREATE POLICY "Users can send messages"
-  ON messages FOR INSERT
-  TO authenticated
-  WITH CHECK (auth.uid() = sender_id);
-
--- Marquage comme lu par le destinataire
-CREATE POLICY "Receivers can update message read status"
-  ON messages FOR UPDATE
-  TO authenticated
-  USING (auth.uid() = receiver_id)
-  WITH CHECK (auth.uid() = receiver_id);
-```
-
-### Policies pour `reviews`
-
-```sql
--- Lecture publique des avis
-CREATE POLICY "Anyone can view reviews"
-  ON reviews FOR SELECT
-  TO authenticated
-  USING (true);
-
--- Création d'avis pour ses propres réservations
-CREATE POLICY "Users can create reviews for their reservations"
-  ON reviews FOR INSERT
-  TO authenticated
-  WITH CHECK (
-    auth.uid() = reviewer_id AND
-    EXISTS (
-      SELECT 1 FROM reservations
-      WHERE reservations.id = reservation_id
-      AND (reservations.renter_id = auth.uid() OR reservations.owner_id = auth.uid())
-      AND reservations.status = 'completed'
-    )
-  );
-
--- Modification de ses propres avis
-CREATE POLICY "Reviewers can update own reviews"
-  ON reviews FOR UPDATE
-  TO authenticated
-  USING (auth.uid() = reviewer_id)
-  WITH CHECK (auth.uid() = reviewer_id);
-```
-
-## Optimisations de performance
-
-### Index composites
-
-```sql
--- Index pour les requêtes de recherche d'objets
-CREATE INDEX idx_objects_search ON objects(status, category, price_per_day) 
-WHERE status = 'available';
-
--- Index pour les requêtes de réservation par dates
-CREATE INDEX idx_reservations_availability ON reservations(object_id, start_date, end_date, status)
-WHERE status IN ('confirmed', 'ongoing');
-
--- Index pour les messages non lus
-CREATE INDEX idx_messages_unread ON messages(receiver_id, read, created_at)
-WHERE read = false;
-```
-
-### Vues matérialisées (optionnelles)
-
-```sql
--- Vue pour les statistiques d'objets populaires
-CREATE MATERIALIZED VIEW popular_objects AS
-SELECT 
-  o.id,
-  o.title,
-  o.category,
-  o.price_per_day,
-  COUNT(r.id) as reservation_count,
-  AVG(r.total_price) as avg_price
-FROM objects o
-LEFT JOIN reservations r ON o.id = r.object_id
-WHERE o.status = 'available'
-GROUP BY o.id, o.title, o.category, o.price_per_day
-ORDER BY reservation_count DESC;
-
--- Refresh périodique
-CREATE OR REPLACE FUNCTION refresh_popular_objects()
-RETURNS void AS $$
-BEGIN
-  REFRESH MATERIALIZED VIEW popular_objects;
-END;
 $$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_object_status_trigger
+  AFTER UPDATE ON reservations
+  FOR EACH ROW EXECUTE FUNCTION update_object_status();
 ```
 
-## Migration et maintenance
+## 🗂️ Storage (Supabase)
 
-### Scripts de migration
+### Buckets
 
+#### `object-images`
+- **Type** : Public
+- **Usage** : Stockage des images d'objets
+- **Politique** : Upload autorisé pour utilisateurs authentifiés
+- **Formats** : JPG, PNG, WebP
+- **Taille max** : 5MB par image
+
+#### `avatars`
+- **Type** : Public
+- **Usage** : Stockage des avatars utilisateurs
+- **Politique** : Upload autorisé pour le propriétaire uniquement
+- **Formats** : JPG, PNG
+- **Taille max** : 2MB
+
+## 📈 Performance et Optimisation
+
+### Index Recommandés
 ```sql
--- Exemple de migration pour ajouter un champ
-ALTER TABLE profiles ADD COLUMN IF NOT EXISTS phone_verified boolean DEFAULT false;
+-- Index composites pour les requêtes fréquentes
+CREATE INDEX idx_objects_search ON objects 
+USING GIN (to_tsvector('french', title || ' ' || description));
 
--- Migration pour ajouter un index
-CREATE INDEX IF NOT EXISTS idx_profiles_phone_verified ON profiles(phone_verified)
-WHERE phone_verified = true;
+CREATE INDEX idx_reservations_dates_status ON reservations 
+(start_date, end_date, status);
+
+CREATE INDEX idx_messages_unread ON messages 
+(receiver_id, read, created_at DESC);
 ```
 
-### Maintenance des données
-
+### Requêtes Optimisées
 ```sql
--- Nettoyage des messages anciens (optionnel)
-DELETE FROM messages 
-WHERE created_at < now() - interval '1 year'
-AND read = true;
-
--- Archivage des réservations terminées (optionnel)
-CREATE TABLE reservations_archive (LIKE reservations INCLUDING ALL);
-INSERT INTO reservations_archive 
-SELECT * FROM reservations 
-WHERE status = 'completed' 
-AND created_at < now() - interval '6 months';
+-- Recherche d'objets avec géolocalisation
+SELECT *, 
+  ST_Distance(
+    ST_Point(longitude, latitude),
+    ST_Point($1, $2)
+  ) as distance
+FROM objects 
+WHERE status = 'available'
+  AND ST_DWithin(
+    ST_Point(longitude, latitude),
+    ST_Point($1, $2),
+    $3
+  )
+ORDER BY distance;
 ```
 
-## Monitoring et surveillance
+## 🔄 Migrations et Évolution
 
-### Requêtes de monitoring
-
-```sql
--- Statistiques générales
-SELECT 
-  (SELECT COUNT(*) FROM profiles) as total_users,
-  (SELECT COUNT(*) FROM objects WHERE status = 'available') as available_objects,
-  (SELECT COUNT(*) FROM reservations WHERE status = 'confirmed') as active_reservations,
-  (SELECT COUNT(*) FROM messages WHERE read = false) as unread_messages;
-
--- Performance des requêtes
-SELECT 
-  schemaname,
-  tablename,
-  attname,
-  n_distinct,
-  correlation
-FROM pg_stats 
-WHERE schemaname = 'public'
-ORDER BY n_distinct DESC;
+### Structure des Migrations
+```
+supabase/migrations/
+├── 001_initial_schema.sql      # Schéma initial
+├── 002_storage_setup.sql       # Configuration storage
+├── 003_add_geolocation.sql     # Ajout géolocalisation
+├── 004_create_handovers.sql    # Table handovers
+└── 005_add_user_roles.sql      # Système de rôles
 ```
 
-Ce schéma de base de données est conçu pour être évolutif, sécurisé et performant, tout en maintenant la simplicité de maintenance et de développement.
+### Bonnes Pratiques
+- **Versioning** : Numérotation séquentielle des migrations
+- **Rollback** : Chaque migration doit être réversible
+- **Tests** : Tester les migrations sur un environnement de dev
+- **Documentation** : Commenter les changements complexes
+
+---
+
+Ce schéma de base de données est conçu pour être scalable, sécurisé et performant, supportant la croissance future de NeuroLoc tout en maintenant la cohérence des données et la sécurité des utilisateurs.

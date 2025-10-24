@@ -73,7 +73,7 @@ export const Profile = () => {
     }));
   };
 
-  const handleAddressSelect = async (selectedAddress: string, formattedAddress: string) => {
+  const handleAddressSelect = async (_selectedAddress: string, formattedAddress: string) => {
     try {
       setLoading(true);
       const geocodeResult = await geolocationService.geocodeAddress(formattedAddress);
