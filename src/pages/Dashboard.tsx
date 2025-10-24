@@ -15,35 +15,54 @@ import { ReservationHandovers } from '../components/handovers/ReservationHandove
 import { AddressManager } from '../components/profile/AddressManager';
 import { CompletedReservations } from '../components/profile/CompletedReservations';
 import { RoleStats } from '../components/profile/RoleStats';
+import { diagnosticUtils } from '../utils/diagnostic';
 import toast from 'react-hot-toast';
 
 export const Dashboard = () => {
-  const { profile } = useAuth();
+  const { profile, loading: authLoading } = useAuth();
   const { isLoueur } = useRole();
   const [myObjects, setMyObjects] = useState<RentalObject[]>([]);
   const [myReservations, setMyReservations] = useState<Reservation[]>([]);
   const [receivedReservations, setReceivedReservations] = useState<Reservation[]>([]);
+  
+  // Debug: Log objects state changes
+  useEffect(() => {
+    console.log('📦 myObjects state changed:', myObjects);
+  }, [myObjects]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'objects' | 'reservations' | 'received' | 'handovers' | 'reviews'>(isLoueur ? 'objects' : 'reservations');
 
   const loadData = useCallback(async () => {
     try {
+      console.log('🔄 loadData called', { profileId: profile?.id, isLoueur, role: profile?.role });
       setLoading(true);
       setError(null);
       
       if (profile?.id) {
-        if (isLoueur) {
+        // Vérifier le rôle directement depuis le profil pour éviter les re-renders
+        const userIsLoueur = profile.role === 'loueur';
+        
+        if (userIsLoueur) {
+          console.log('📦 Loading objects for loueur...');
           const [objects, rentals, received] = await Promise.all([
             objectsService.getObjectsByOwner(profile.id),
             reservationsService.getReservationsAsRenter(),
             reservationsService.getReservationsAsOwner()
           ]);
           
-          setMyObjects(objects);
+          console.log('📦 Objects loaded:', objects);
+          // Vérifier que nous avons bien des objets avant de les définir
+          if (Array.isArray(objects)) {
+            setMyObjects(objects);
+          } else {
+            console.warn('⚠️ Objects is not an array:', objects);
+            setMyObjects([]);
+          }
           setMyReservations(rentals);
           setReceivedReservations(received);
         } else {
+          console.log('👤 Loading data for renter...');
           const [rentals, received] = await Promise.all([
             reservationsService.getReservationsAsRenter(),
             reservationsService.getReservationsAsOwner()
@@ -54,27 +73,29 @@ export const Dashboard = () => {
           setReceivedReservations(received);
         }
       } else {
+        console.log('❌ No profile ID found');
         setError('Profil utilisateur non trouvé. Veuillez vous reconnecter.');
       }
     } catch (error) {
+      console.error('❌ Error in loadData:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erreur inconnue';
       setError(`Erreur lors du chargement des données: ${errorMessage}`);
       toast.error(`Erreur lors du chargement des données: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
-  }, [profile?.id, isLoueur]);
+  }, [profile?.id, profile?.role]);
 
+  // Charger les données quand le profil est disponible
   useEffect(() => {
-    loadData();
-  }, [loadData]);
-
-  // Recharger les données quand le profil change
-  useEffect(() => {
-    if (profile?.id) {
+    console.log('🔄 useEffect triggered', { authLoading, profileId: profile?.id, isLoueur });
+    if (!authLoading && profile?.id) {
+      console.log('✅ Conditions met, calling loadData');
       loadData();
+    } else {
+      console.log('❌ Conditions not met', { authLoading, profileId: profile?.id });
     }
-  }, [profile?.id, loadData]);
+  }, [profile?.id, authLoading, loadData]);
 
   const handleDeleteObject = async (id: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cet objet ?')) return;
@@ -114,6 +135,26 @@ export const Dashboard = () => {
     );
   };
 
+  const getObjectStatusBadge = (status: string) => {
+    const badges = {
+      available: 'bg-green-100 text-green-800',
+      rented: 'bg-blue-100 text-blue-800',
+      unavailable: 'bg-red-100 text-red-800'
+    };
+
+    const labels = {
+      available: 'Disponible',
+      rented: 'Loué',
+      unavailable: 'Indisponible'
+    };
+
+    return (
+      <span className={`px-3 py-1 rounded-full text-sm font-medium ${badges[status as keyof typeof badges]}`}>
+        {labels[status as keyof typeof labels]}
+      </span>
+    );
+  };
+
   const handleAcceptReservation = async (reservationId: string) => {
     try {
       await reservationsService.acceptReservation(reservationId);
@@ -136,7 +177,18 @@ export const Dashboard = () => {
     }
   };
 
-  if (loading) {
+  const handleDiagnostic = async () => {
+    try {
+      await diagnosticUtils.generateDiagnosticReport();
+      toast.success('✅ Diagnostic terminé - Vérifiez la console pour les détails');
+      loadData(); // Recharger les données après correction
+    } catch (error: unknown) {
+      console.error('Error running diagnostic:', error);
+      toast.error('Erreur lors du diagnostic');
+    }
+  };
+
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader size="lg" />
@@ -155,14 +207,24 @@ export const Dashboard = () => {
               </h1>
               <p className="text-gray-600">Gérez vos objets et vos réservations</p>
             </div>
-            <button
-              onClick={loadData}
-              disabled={loading}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-              <span className="text-white">Actualiser</span>
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={loadData}
+                disabled={loading}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+                <span className="text-white">Actualiser</span>
+              </button>
+              <button
+                onClick={handleDiagnostic}
+                disabled={loading}
+                className="flex items-center space-x-2 px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <AlertCircle className="h-4 w-4" />
+                <span className="text-white">Diagnostic</span>
+              </button>
+            </div>
           </div>
           
           {/* Statistiques de rôle */}
@@ -289,6 +351,11 @@ export const Dashboard = () => {
                     {myObjects.map((object) => (
                       <div key={object.id} className="relative">
                         <ObjectCard object={object} />
+                        {/* Badge de statut de l'objet */}
+                        <div className="absolute top-2 right-2">
+                          {getObjectStatusBadge(object.status)}
+                        </div>
+                        {/* Boutons d'action */}
                         <div className="absolute top-2 left-2 flex space-x-2">
                           <Link
                             to={`/objects/${object.id}/edit`}

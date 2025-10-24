@@ -122,6 +122,13 @@ export const reservationsService = {
   },
 
   async cancelReservation(id: string): Promise<void> {
+    // Récupérer d'abord l'objet lié à la réservation
+    const { data: reservation } = await supabase
+      .from('reservations')
+      .select('object_id')
+      .eq('id', id)
+      .single();
+
     const { error } = await supabase
       .from('reservations')
       .update({
@@ -131,6 +138,17 @@ export const reservationsService = {
       .eq('id', id);
 
     if (error) throw error;
+
+    // Remettre l'objet en 'available' si la réservation est annulée
+    if (reservation?.object_id) {
+      await supabase
+        .from('objects')
+        .update({ 
+          status: 'available',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', reservation.object_id);
+    }
   },
 
   async acceptReservation(id: string): Promise<Reservation> {
@@ -150,6 +168,18 @@ export const reservationsService = {
       .single();
 
     if (error) throw error;
+
+    // Mettre à jour le statut de l'objet vers 'rented'
+    if (data.object_id) {
+      await supabase
+        .from('objects')
+        .update({ 
+          status: 'rented',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', data.object_id);
+    }
+
     return data;
   },
 
@@ -170,6 +200,18 @@ export const reservationsService = {
       .single();
 
     if (error) throw error;
+
+    // Remettre l'objet en 'available' si la réservation est rejetée
+    if (data.object_id) {
+      await supabase
+        .from('objects')
+        .update({ 
+          status: 'available',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', data.object_id);
+    }
+
     return data;
   },
 
@@ -191,6 +233,57 @@ export const reservationsService = {
       .single();
 
     if (error) throw error;
+
+    // Mettre à jour le statut de l'objet vers 'rented'
+    if (data.object_id) {
+      await supabase
+        .from('objects')
+        .update({ 
+          status: 'rented',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', data.object_id);
+    }
+
+    return data;
+  },
+
+  async completeReservation(id: string): Promise<Reservation> {
+    // Récupérer d'abord l'objet lié à la réservation
+    const { data: reservation } = await supabase
+      .from('reservations')
+      .select('object_id')
+      .eq('id', id)
+      .single();
+
+    const { data, error } = await supabase
+      .from('reservations')
+      .update({
+        status: 'completed',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id)
+      .select(`
+        *,
+        object:objects(*),
+        renter:profiles!reservations_renter_id_fkey(*),
+        owner:profiles!reservations_owner_id_fkey(*)
+      `)
+      .single();
+
+    if (error) throw error;
+
+    // Remettre l'objet en 'available' quand la réservation est terminée
+    if (reservation?.object_id) {
+      await supabase
+        .from('objects')
+        .update({ 
+          status: 'available',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', reservation.object_id);
+    }
+
     return data;
   },
 
