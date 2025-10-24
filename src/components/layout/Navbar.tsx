@@ -143,9 +143,6 @@ export const Navbar = () => {
                     <button className="p-2 text-neutral-600 hover:text-brand-600 hover:bg-neutral-50 rounded-xl transition-all duration-200">
                       <Search className="h-4 w-4" />
                     </button>
-                    <button className="p-2 text-neutral-600 hover:text-brand-600 hover:bg-neutral-50 rounded-xl transition-all duration-200">
-                      <QrCode className="h-4 w-4" />
-                    </button>
                     <button className="relative p-2 text-neutral-600 hover:text-brand-600 hover:bg-neutral-50 rounded-xl transition-all duration-200">
                       <Bell className="h-4 w-4" />
                       {unreadCount > 0 && (
@@ -155,7 +152,15 @@ export const Navbar = () => {
                       )}
                     </button>
                   </div>
-                  
+                  <Link to="/qr-scanner">
+                    <Button 
+                      variant="primary" 
+                      size="sm"
+                      leftIcon={<QrCode className="h-4 w-4" />}
+                    >
+                      Scanner
+                    </Button>
+                  </Link>
                   {/* Bouton Publier */}
                   <Link to="/objects/new">
                     <Button 
@@ -300,20 +305,16 @@ export const Navbar = () => {
                     )}
                   </button>
                 </div>
-                
+                <Link to="/qr-scanner"> <Button variant="primary" size="lg" leftIcon={<QrCode className="h-5 w-5" />} className="w-full">
+                    Scanner
+                  </Button></Link>
                 <Link to="/objects/new" className="w-full">
                   <Button variant="primary" size="lg" leftIcon={<Plus className="h-5 w-5" />} className="w-full">
-                    Publier un objet
+                    Publier
                   </Button>
                 </Link>
                 
-                <Link
-                  to="/profile"
-                  className="flex items-center gap-3 w-full text-left text-neutral-700 hover:text-brand-600 hover:bg-neutral-50 px-4 py-3 rounded-xl transition-all duration-200"
-                >
-                  <Settings className="h-4 w-4" />
-                  <span className="font-medium text-sm">Paramètres</span>
-                </Link>
+                
                 
                 <button
                   onClick={() => {

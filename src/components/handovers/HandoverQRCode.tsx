@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { QrCode, CheckCircle, XCircle, Clock, MapPin, Calendar, Download, Share2 } from 'lucide-react';
 import { Handover, HandoverStatus } from '../../types';
 import { QRCodeGenerator } from '../common/QRCodeGenerator';
+import { Card, CardContent, CardHeader } from '../common/Card';
+import { Button } from '../common/Button';
+import { Badge } from '../common/Badge';
 import toast from 'react-hot-toast';
 
 interface HandoverQRCodeProps {
@@ -12,23 +15,18 @@ interface HandoverQRCodeProps {
 export const HandoverQRCode = ({ handover, isOwner = false }: HandoverQRCodeProps) => {
   const [showQRCode, setShowQRCode] = useState(false);
 
-  const getStatusColor = (status: HandoverStatus) => {
+  const getStatusBadge = (status: HandoverStatus) => {
     switch (status) {
-      case 'pending': return 'text-yellow-600 bg-yellow-100';
-      case 'picked_up': return 'text-blue-600 bg-blue-100';
-      case 'returned': return 'text-green-600 bg-green-100';
-      case 'cancelled': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  const getStatusIcon = (status: HandoverStatus) => {
-    switch (status) {
-      case 'pending': return <Clock className="h-4 w-4" />;
-      case 'picked_up': return <CheckCircle className="h-4 w-4" />;
-      case 'returned': return <CheckCircle className="h-4 w-4" />;
-      case 'cancelled': return <XCircle className="h-4 w-4" />;
-      default: return <Clock className="h-4 w-4" />;
+      case 'pending':
+        return <Badge variant="warning">En attente</Badge>;
+      case 'picked_up':
+        return <Badge variant="brand">Récupéré</Badge>;
+      case 'returned':
+        return <Badge variant="success">Rendu</Badge>;
+      case 'cancelled':
+        return <Badge variant="accent">Annulé</Badge>;
+      default:
+        return <Badge variant="default">Inconnu</Badge>;
     }
   };
 
